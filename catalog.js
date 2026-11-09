@@ -37,7 +37,7 @@ function startSession() {
   research_only:{questionnaire:researchContext,operator_verification:'unverified',agent_connected:false}};
  db.sessions.push(session);sessionStorage.setItem('rs_active_catalog_session',session.session_id);save();event('session_started',{catalog_version:session.catalog_version,interface_version:session.interface_version});
 }
-function event(type,payload={}) {const record={schema_version:'rs-platform-event-v2',event_uuid:uid(),event_id:session.events.length+1,at:new Date().toISOString(),type,...payload};session.events.push(record);save();window.rsSendPlatformEvent?.(record,session.session_id);return record;}
+function event(type,payload={}) {const record={schema_version:'rs-platform-event-v2',event_uuid:uid(),event_id:session.events.length+1,at:new Date().toISOString(),viewport:{width:innerWidth,height:innerHeight},type,...payload};session.events.push(record);save();window.rsSendPlatformEvent?.(record,session.session_id);return record;}
 function toast(text){$('toast').textContent=text;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3500);}
 function activeSession(){if(session.status==='open')return true;toast('这次选择已记录。请点“开始下一次浏览”继续。');return false;}
 function displayState(){return {page_view_id:pageViewId,scene,group,query,sort,page,
@@ -110,7 +110,7 @@ document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b
 document.querySelectorAll('dialog').forEach(d=>d.addEventListener('cancel',e=>{if(d.id==='detail-dialog'&&history.state?.detail){e.preventDefault();history.back();}else event('back_or_close',{from:d.id,via:'escape'});}));
 $('compare-open').onclick=()=>{if(!activeSession())return;const products=[...compared].map(id=>itemMap.get(id));
  const context={...displayState(),available_item_ids:products.map(p=>p.id),viewport_item_ids:[],positions:products.map((p,i)=>({item_id:p.id,result_position:i+1,page_position:i+1}))};
- event('comparison_open',{item_ids:products.map(p=>p.id),position_order:products.map(p=>p.id)});
+ event('comparison_open',{item_ids:products.map(p=>p.id),position_order:products.map(p=>p.id),item_snapshots:products.map((p,i)=>({item_id:p.id,position:i+1,price:p.price,currency:p.currency}))});
  // Explicit comparison is a materially considered set; retain the UI column order.
  const comparisonGroup='comparison-'+uid();products.forEach(p=>consider(p.id,'explicit_comparison',context,comparisonGroup));
  const fields=[...new Set(products.flatMap(p=>Object.keys(attributesOf(p))))];
@@ -142,6 +142,7 @@ $('export-records').onclick=()=>{const blob=new Blob([JSON.stringify(exportData(
 $('erase-records').onclick=()=>{if(!confirm('清除这个浏览器中的购物记录？服务器记录和待同步记录不会删除，个人身份保持不变。'))return;db={version:1,user_id:'local-'+uid(),sessions:[]};researchContext=null;try{sessionStorage.removeItem('rs_need_handoff_v1');}catch{}startSession();$('records-dialog').close();compared.clear();$('outcome').hidden=true;render();toast('本机购物记录已清除。');};
 document.addEventListener('visibilitychange',()=>{if(session.status==='open')event('visibility_change',{state:document.visibilityState});});
 let scrollTimer;window.addEventListener('scroll',()=>{clearTimeout(scrollTimer);scrollTimer=setTimeout(()=>{if(session.status==='open')event('scroll',{y:Math.round(scrollY),page_view_id:pageViewId,visible_item_ids:[...visible]});},500);},{passive:true});
+let detailScrollTimer;$('detail-dialog').addEventListener('scroll',()=>{clearTimeout(detailScrollTimer);detailScrollTimer=setTimeout(()=>{if(session.status==='open'&&$('detail-dialog').open)event('scroll',{surface:'detail_dialog',item_id:currentItem,y:Math.round($('detail-dialog').scrollTop),viewport_height:$('detail-dialog').clientHeight});},350);},{passive:true});
 if(researchContext?.confirmedNeed?.currentWords?.want){$('need-context').hidden=false;$('need-text').textContent=researchContext.confirmedNeed.currentWords.want;}
 const currentOwner=()=>document.documentElement.dataset.agentBrowser ? 'agent:'+JSON.parse(sessionStorage.getItem('rs_agent_observer')).run : window.rsIdentity?.get()?.participant_id??null;
 const activeId=sessionStorage.getItem('rs_active_catalog_session');

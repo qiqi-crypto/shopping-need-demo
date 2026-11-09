@@ -1,1 +1,1 @@
-window.SHOPPING_AGENT_API = 'https://additions-prisoner-define-inspector.trycloudflare.com';
+window.SHOPPING_AGENT_API = 'https://vermont-dollar-edgar-fancy.trycloudflare.com';

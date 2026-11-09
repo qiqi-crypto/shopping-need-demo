@@ -14,12 +14,13 @@
   try{
    const agent=!!run,credential=agent?token:window.rsIdentity?.get()?.token;
    const base=agent?'':(window.SHOPPING_AGENT_API||location.origin);
-   const r=await fetch(base+(agent?'/api/platform/'+encodeURIComponent(run):'/api/participant/events'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},body:JSON.stringify({session_id:first.sessionId,events:batch.map(x=>x.record)})});
+   const r=await fetch(base+(agent?'/api/platform/'+encodeURIComponent(run):'/api/participant/events'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},signal:typeof AbortSignal!=='undefined'?AbortSignal.timeout(8000):undefined,keepalive:JSON.stringify(batch).length<12000,body:JSON.stringify({session_id:first.sessionId,events:batch.map(x=>x.record)})});
    const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'HTTP '+r.status);
    const ack=new Set(d.acknowledged);for(const x of batch)if(ack.has(x.record.event_uuid))localStorage.removeItem(prefix+x.record.event_uuid);
    window.rsSyncStatus?.(queued().some(x=>x.owner===id)?'正在保存浏览记录…':'已保存到服务器 · '+new Date().toLocaleTimeString());
   }catch(e){window.rsSyncStatus?.('待同步 '+queue.filter(x=>x.owner===id).length+' 条 · '+e.message);}
   finally{busy=false;}
  }
+ window.rsDrainPlatformEvents=async()=>{const deadline=Date.now()+12000;while(queued().some(x=>x.owner===owner())&&Date.now()<deadline){if(!busy)await flush();await new Promise(resolve=>setTimeout(resolve,100));}return {pending:queued().filter(x=>x.owner===owner()).length};};
  setInterval(flush,1200);window.addEventListener('online',flush);window.addEventListener('pagehide',flush);document.addEventListener('visibilitychange',()=>{if(document.hidden)flush();});window.rsFlushPlatformEvents=flush;
 })();

@@ -1,6 +1,7 @@
 'use strict';
 // Platform observations and private questionnaire answers are stored separately.
 // This preview never infers or fabricates a Human/Agent ground-truth label.
+const agentBrowserMode=document.documentElement.dataset.agentBrowser==='true';
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Hard publication gate: both a sourced positive price and a validated local image.
@@ -98,7 +99,7 @@ function openItem(id,context=displayState()){if(!activeSession())return;const p=
  ${Object.keys(attributes).length?`<section class="detail-section"><h3>规格与属性</h3><table class="spec-table"><tbody>${Object.entries(attributes).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.map(esc).join(' / ')}</td></tr>`).join('')}</tbody></table></section>`:''}
  ${p.reviews?.length?`<section class="detail-section"><h3>买家评论</h3>${p.reviews.map(r=>`<p>${esc(r.text)}</p>`).join('')}</section>`:''}
  <details class="detail-section"><summary>商品与价格来源</summary><p>${esc(p.source)} · ${esc(p.source_item_id)}</p><p>价格直接取自原始 price 字段（USD），原始美元数值不变；人民币另按标明的参考汇率换算。单品采集日期和当前库存未核实。</p><p>商品文字由服务器上的 Qwen 模型机器翻译；品牌、型号与原文保留供核对。</p></details>`;
- $('detail-body').querySelector('[data-compare]').onclick=()=>toggleCompare(id);$('choose-item').onclick=()=>choose(id);
+ $('detail-body').querySelector('[data-compare]').onclick=()=>toggleCompare(id);$('choose-item').disabled=agentBrowserMode;$('choose-item').hidden=agentBrowserMode;$('choose-item').onclick=()=>choose(id);
  $('detail-body').querySelectorAll('[data-variant]').forEach(el=>el.onchange=()=>{variants[el.dataset.variant]=el.value;event('variant_change',{item_id:id,attribute:el.dataset.variant,value:el.value,combination_verified:false});});
  if(!history.state?.detail)history.pushState({detail:id},'',location.pathname+location.search+'#item='+encodeURIComponent(id));
  $('detail-dialog').showModal();updateCompare();
@@ -119,10 +120,10 @@ $('compare-open').onclick=()=>{if(!activeSession())return;const products=[...com
  $('compare-body').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{toggleCompare(b.dataset.remove);$('compare-dialog').close();});$('compare-dialog').showModal();
 };
 function choose(id){if(!activeSession())return;pendingChoice={item_id:id,variant_options:{...variants},displayed_price:itemMap.get(id).price,currency:itemMap.get(id).currency,cny_reference:fxReference?Number((itemMap.get(id).price*fxReference.rate).toFixed(2)):null,fx_reference:fxReference,price_status:itemMap.get(id).price_status};$('choice-title').textContent=itemMap.get(id).title;$('choice-dialog').showModal();event('selection_proposed',pendingChoice);}
-$('confirm-choice').onclick=()=>{if(!activeSession())return;const choice={...pendingChoice,at:new Date().toISOString(),kind:'preview_preference_selection',price_accepted:false};session.final_selection=choice;event('selection_confirmed',choice);finish('selected');};
-$('no-selection').onclick=()=>{if(!activeSession())return;session.final_selection={item_id:null,at:new Date().toISOString(),kind:'explicit_no_selection'};event('no_selection');finish('no_selection');};
+$('confirm-choice').onclick=()=>{if(agentBrowserMode)return;if(!activeSession())return;const choice={...pendingChoice,at:new Date().toISOString(),kind:'preview_preference_selection',price_accepted:false};session.final_selection=choice;event('selection_confirmed',choice);finish('selected');};
+$('no-selection').onclick=()=>{if(agentBrowserMode)return;if(!activeSession())return;session.final_selection={item_id:null,at:new Date().toISOString(),kind:'explicit_no_selection'};event('no_selection');finish('no_selection');};
 function finish(status){history.replaceState({},'',location.pathname+location.search);event('session_ended',{status});session.status=status;session.ended_at=new Date().toISOString();save();document.querySelectorAll('dialog[open]').forEach(d=>d.close());observer?.disconnect();$('outcome').hidden=false;$('outcome').innerHTML='<strong>'+ (status==='selected'?'已记录你的选择':'已记录：这次先不选')+'</strong><p>'+ (status==='selected'?esc(itemMap.get(session.final_selection.item_id).title):'没有合适的商品，也是一种有效结果。')+'</p><p>本次没有产生订单。可以导出记录，或开始下一次浏览。</p>';$('outcome').scrollIntoView({behavior:'smooth'});}
-$('new-session').onclick=()=>{if(session.status==='open'){event('session_ended',{status:'abandoned'});session.status='abandoned';session.ended_at=new Date().toISOString();save();}compared.clear();group='';query='';$('query').value='';page=1;startSession();$('outcome').hidden=true;render();toast('新会话已开始，用户身份保持不变，连接后会自动存到服务器。');};
+$('new-session').onclick=()=>{if(agentBrowserMode)return;if(session.status==='open'){event('session_ended',{status:'abandoned'});session.status='abandoned';session.ended_at=new Date().toISOString();save();}compared.clear();group='';query='';$('query').value='';page=1;startSession();$('outcome').hidden=true;render();toast('新会话已开始，用户身份保持不变，连接后会自动存到服务器。');};
 $('search-form').onsubmit=e=>{e.preventDefault();if(!activeSession())return;query=$('query').value.trim();page=1;event('search',{query,scene,group});renderProducts();};
 $('sort').onchange=()=>{if(!activeSession())return;sort=$('sort').value;page=1;event('sort_change',{sort});renderProducts();};
 $('clear-filters').onclick=()=>{if(!activeSession())return;group='';query='';page=1;sort='default';$('query').value='';$('sort').value=sort;event('filters_cleared');render();};
@@ -157,6 +158,7 @@ window.addEventListener('rs-identity-changed',()=>{
  document.querySelectorAll('dialog[open]').forEach(d=>d.close());compared.clear();startSession();render();
 });
 window.addEventListener('pagehide',()=>{if(session.status==='open')event('page_exit',{page_view_id:pageViewId});});
+if(agentBrowserMode){for(const id of ['new-session','no-selection','confirm-choice','open-records']){$(id).disabled=true;$(id).hidden=true;}document.querySelectorAll('.utility-bar nav,.need-entry').forEach(n=>n.hidden=true);}
 render();
 
 if(fxReference){$('exchange-note').innerHTML='人民币换算参考：1 USD = '+esc(fxReference.rate)+' CNY，汇率日期 '+esc(fxReference.rate_date)+'。不含税费、运费，不是国内实际售价。 <a href="'+esc(fxReference.source_url)+'" target="_blank" rel="noopener">汇率来源</a>';}

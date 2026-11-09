@@ -22,6 +22,8 @@
 
 .life-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.life-card{min-height:95px;padding:14px}.life-card[aria-pressed=true]{padding:13px}.life-card strong{font-size:15px}.life-card .icon{font-size:24px}.subscene-grid{display:flex;flex-wrap:wrap;gap:8px}.subscene{font-size:13px;padding:9px 13px}.subscene[aria-pressed=true]{background:var(--green);color:white}#life-detail{margin-top:24px}#life-detail h3{font-size:15px}.history-editor{background:#f5f7ef;border:1px solid var(--line);border-radius:16px;padding:18px}.history-editor .field{margin:0 0 14px}.history-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.history-cols label{font-size:13px}.history-cols select{padding:8px;font-size:13px}.history-actions{margin-top:15px}.past-card{padding:14px 16px;border:1px solid var(--line);border-radius:13px;margin:0 0 12px}.past-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.past-title strong{overflow-wrap:anywhere}.past-card p{font-size:13px;margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}.past-actions{display:flex;gap:16px}.past-actions .ghost{padding:0}.progress{display:grid;grid-template-columns:repeat(4,1fr)}.progress li{min-width:0}.progress li span{flex-shrink:0}.past-title .tag{flex-shrink:0}
 @media(max-width:540px){.life-grid{grid-template-columns:repeat(2,1fr)}.life-card strong{font-size:15px}.history-editor{padding:14px}.history-cols{grid-template-columns:1fr 1fr}.history-cols>.field:last-child{grid-column:1/-1}.progress{grid-template-columns:repeat(4,1fr);gap:4px}.progress li{font-size:10px;gap:3px}.progress span{width:18px;height:18px}.body{padding:22px 18px}}
+
+.task-context{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:#eaf1e9;border-left:4px solid var(--green);border-radius:12px;padding:15px 17px;margin-bottom:25px}.task-context small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.task-context strong{display:block;font-size:18px}.task-context p{margin:7px 0 0;font-size:14px;line-height:1.6;overflow-wrap:anywhere}.task-context .ghost{flex-shrink:0}.order-intro{margin:16px 0 22px;padding:15px;border:1px solid var(--line);border-radius:12px}.order-intro p{font-size:13px;margin:8px 0;line-height:1.6}.order-intro strong{font-size:14px}.order-image-list{display:grid;gap:12px;margin-top:12px}.order-preview{display:grid;gap:7px;justify-items:start}.order-preview img{width:100%;max-height:420px;object-fit:contain;border:1px solid var(--line);background:white}.order-preview span{font-size:12px;color:var(--muted)}#order-images{max-width:100%;font-size:13px}#task-context[hidden]{display:none}
   </style>
 
 </head>
@@ -36,39 +38,40 @@
     <div class="panel">
       <ol class="progress" aria-label="填写进度"><li><span>1</span>生活场景</li><li><span>2</span>过去买用</li><li><span>3</span>这次需求</li><li><span>4</span>确认</li></ol>
       <div class="body">
+        <aside id="task-context" class="task-context" aria-label="本次购物背景" hidden><div><small>这次的生活场景</small><strong id="task-context-scene"></strong><p id="task-context-reason"></p></div><button class="ghost" id="change-life">修改</button></aside>
 
         <section id="step-life" aria-labelledby="title-life">
-          <div class="step-label">01 / 真实生活</div><h2 id="title-life" tabindex="-1">最近，哪件事需要添点东西？</h2><p class="lead">选一个你正在经历的场景。</p>
+          <div class="step-label">01 / 真实生活</div><h2 id="title-life" tabindex="-1">最近，哪件事需要添点东西？</h2><p class="lead">先选场景，再说为什么现在需要买。</p>
           <div class="life-grid" id="life-grid" aria-label="生活场景"></div>
-          <div id="life-detail" hidden><h3 id="life-detail-title">具体是哪种情况？</h3><div class="subscene-grid" id="life-subscenes" aria-label="具体情况"></div></div>
-          <details class="optional-input"><summary>用自己的话补充</summary><label for="life-other" class="sr-only">自己的场景</label><input id="life-other" type="text" maxlength="400" placeholder="没有合适的选项，也可以直接写"></details>
-          <p id="life-error" class="error" role="alert" hidden>选一个场景，或者写下你自己的情况。</p>
-          <div class="actions"><button class="text-btn" id="life-none">最近没有购买需求</button><button class="primary" id="life-next">聊聊以前买过什么 →</button></div>
+          <div id="life-detail" hidden><h3 id="life-detail-title">最近发生了什么？</h3><div class="subscene-grid" id="life-subscenes" aria-label="具体情况"></div></div>
+          <details class="optional-input"><summary>其他原因 / 自己说</summary><label for="life-other" class="sr-only">自己的场景</label><input id="life-other" type="text" maxlength="400" placeholder="比如刚养猫，家里还没有它的用品"></details>
+          <p id="life-error" class="error" role="alert" hidden>选一个场景，再选原因；也可以直接写下你的情况。</p>
+          <div class="actions"><button class="text-btn" id="life-none">最近没有购买需求</button><button class="primary" id="life-next">看看以前买过什么 →</button></div>
         </section>
         <section id="step-history" aria-labelledby="title-history" hidden>
-          <div class="step-label">02 / 过去买过、用过</div><h2 id="title-history" tabindex="-1">以前用过什么？喜欢吗？</h2><p class="lead" id="history-context"></p>
+          <div class="step-label">02 / 过去的购买</div><h2 id="title-history" tabindex="-1">看看以前买过什么</h2><p class="lead" id="history-context"></p>
+          <div class="order-intro"><strong>打开淘宝等平台的订单，选几件相关商品。</strong><p>尽量按时间查看，买错、退货的也可以记，不只挑喜欢的。</p><details class="optional-input"><summary>用订单截图帮助回忆（可选）</summary><p class="hint">先遮住姓名、电话、地址和订单号。只选相关商品部分。</p><label for="order-images" class="sr-only">选择已遮挡个人信息的订单截图</label><input id="order-images" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="hint">仅在本页预览，不上传；暂未接入自动识别，请对照截图填写下面的商品。最多 3 张，每张 8 MB。</p><p id="order-image-error" class="error" role="alert" hidden></p><div id="order-image-list" class="order-image-list"></div></details></div>
           <div id="history-list" class="history-list" aria-live="polite"></div>
           <form id="history-form" novalidate>
-            <div class="history-editor"><div class="field"><label for="past-item">商品名称 / 品牌型号</label><input id="past-item" type="text" maxlength="250" placeholder="先写一件熟悉的，记不全也没关系"></div>
-            <div class="history-cols"><div class="field"><label for="past-bought">买过吗？</label><select id="past-bought"><option value="unknown">还没选</option><option value="self">我买过</option><option value="others">别人买的</option><option value="no">没有买过</option><option value="unsure">记不清</option></select></div>
-            <div class="field"><label for="past-used">用过吗？</label><select id="past-used"><option value="unknown">还没选</option><option value="yes">用过</option><option value="no">没用过</option><option value="unsure">记不清</option></select></div>
-            <div class="field"><label for="past-rating">用下来感觉？</label><select id="past-rating"><option value="unknown">暂不评价</option><option value="like">喜欢</option><option value="neutral">一般</option><option value="dislike">不喜欢</option></select></div></div>
-            <details class="optional-input" id="history-more"><summary>补充原因、时间等（可选）</summary>
+            <div class="history-editor"><div class="field"><label for="past-item">确认一件买过的商品</label><input id="past-item" type="text" maxlength="250" placeholder="商品名称 / 品牌型号，可对照订单填写"></div>
+            <div class="cols"><div class="field"><label for="past-time">大概什么时候买的？</label><input id="past-time" type="text" maxlength="100" placeholder="如 2026 年 8 月；可留空"></div><div class="field"><label for="past-order-state">这笔订单后来怎么样？</label><select id="past-order-state"><option value="unknown">暂不填写</option><option value="completed">已买到 / 保留了</option><option value="refunded">退货 / 退款了</option><option value="cancelled">取消 / 未付款</option><option value="pending">还在等收货</option></select></div></div>
+            <details class="optional-input" id="history-more"><summary>补一句使用感受（可选）</summary>
+              <div class="field"><label for="past-rating">用下来感觉？</label><select id="past-rating"><option value="unknown">暂不评价 / 没用过</option><option value="like">喜欢</option><option value="neutral">一般</option><option value="dislike">不喜欢</option></select></div>
               <div class="field"><label for="past-reason">喜欢 / 不喜欢哪里？</label><input id="past-reason" type="text" maxlength="400" placeholder="比如一直很好用，或者有哪里不方便"></div>
-              <div class="cols"><div class="field"><label for="past-time">大概什么时候买的？</label><input id="past-time" type="text" maxlength="100" placeholder="如今年春天；记不清可留空"></div><div class="field"><label for="past-repeat">后来还买过同款吗？</label><select id="past-repeat"><option value="unknown">记不清 / 不适用</option><option value="yes">又买过</option><option value="no">没有</option></select></div></div>
+              <div class="field"><label for="past-repeat">后来还买过同款吗？</label><select id="past-repeat"><option value="unknown">记不清 / 不适用</option><option value="yes">又买过</option><option value="no">没有</option></select></div>
               <div class="field"><label for="past-recipient">主要给谁用？</label><select id="past-recipient"><option value="unknown">还没选</option><option value="self">自己</option><option value="household">家人 / 家里共用</option><option value="pet">宠物</option><option value="gift">送人 / 替别人买</option></select></div>
               <div class="field"><label for="past-link">商品链接或规格</label><input id="past-link" type="text" maxlength="500" placeholder="可不填，不需要订单号或地址"></div>
             </details>
             <p id="history-error" class="error" role="alert" hidden></p><div class="actions history-actions"><button type="button" class="ghost" id="history-cancel">清空这件</button><button class="secondary" id="history-save" type="submit">记下这件</button></div></div>
           </form>
-          <p class="hint">可以记几件，也可以跳过。买过和喜欢，会分开记录。</p>
+          <p class="hint">可以继续记几件，也可以跳过。截图不会自动变成购买记录。</p>
           <div class="actions"><button class="secondary" id="history-back">← 换个场景</button><button class="primary" id="history-next">说说这次想买什么 →</button></div>
           <div class="guidance-exit"><button class="ghost" id="history-skip">暂时想不起来</button></div>
         </section>
         <section id="step-1" aria-labelledby="title-1" hidden>
           <div class="step-label">03 / 这次的需求</div><h2 id="title-1" tabindex="-1">这次想买什么？</h2><p class="lead" id="current-context">从你现在需要解决的问题说起。</p>
           <div class="field"><label for="need">我想买……</label><textarea id="need" maxlength="600" placeholder="先用自己的话说说……"></textarea></div>
-          <div class="field"><label for="reason">为什么想买？<span class="optional">可不填</span></label><textarea id="reason" maxlength="600" placeholder="说说遇到的问题或实际用途"></textarea></div>
+          <div class="field"><label for="reason">还有什么具体问题？<span class="optional">可不填</span></label><textarea id="reason" maxlength="600" placeholder="上面已记下购买原因，这里可补充具体用途"></textarea></div>
           <div class="cols"><div class="field"><label for="budget">原本的预算</label><input id="budget" type="text" maxlength="100" placeholder="没定可以留空"></div><div class="field"><label for="timing">打算什么时候买？</label><select id="timing"><option>尚未确定</option><option>这几天</option><option>一到两周内</option><option>一个月内</option><option>更晚一些</option><option>目前只是了解，不急着买</option></select></div></div>
           <div class="field"><label for="purchase-stage">目前的进度</label><select id="purchase-stage"><option>尚未填写</option><option>还在寻找合适的商品</option><option>已经选定具体商品，只需要购买</option><option>尚未决定是否购买</option></select></div>
           <div class="field"><label for="without-study">不参加研究，你也打算买吗？</label><select id="without-study"><option>还没想清楚</option><option>仍准备按原计划购买</option><option>会继续了解，是否购买还不确定</option><option>目前没有购买打算，主要想体验一下</option></select></div>
@@ -136,7 +139,7 @@
       <div class="note"><div class="note-kicker">可回溯的数据边界</div><div class="data-grid"><div class="data-row"><strong>研究侧</strong>生活场景、自报购买与使用记录、当前需求、卡片选择与修改。</div><div class="data-row"><strong>Agent 侧</strong>被委托时接收用户确认的需求和后续反馈；跳过的内容不是偏好。</div><div class="data-row"><strong>RS_Agent 平台模型</strong>问卷历史单独保存，待确认偏好初始化方案；当前任务、对话和来源标签不作为来源识别特征。真实商城轨迹另记。</div></div><details><summary>查看本次演示记录</summary><pre id="data-preview"></pre><button class="secondary" id="download-record">下载本次演示记录</button><p class="hint">只下载到你自己的设备，不上传服务器。</p></details></div>
     </aside>
   </div>
-  <p class="footer">演示版 · 历史仅保留在当前页面，刷新即清空。未连接商品库、账号或商城。</p>
+  <p class="footer">演示版 · 历史仅保留在当前页面，刷新即清空。未连接商品库、账号或商城。<br></p>
 </main>
 <script>
 'use strict';
@@ -214,21 +217,31 @@ const templates = {
 };
 
 const lifeScenes={
- baby:{label:'母婴 / 育儿',icon:'🧸',sub:['宝宝日常照顾','带娃出门','孩子长大换用品','给孩子布置空间']},
- moving:{label:'搬家 / 安家',icon:'🏠',sub:['搬进新住处','租房添置用品','收纳空间不够','清洁 / 布置新家']},
- pets:{label:'宠物生活',icon:'🐾',sub:['日常补给','清洁 / 护理','带宠物出门','迎接新宠物']},
- daily:{label:'日常生活',icon:'🧺',sub:['日用品快用完了','旧物不好用了','换季添置','改善日常小麻烦']},
- sports:{label:'运动 / 户外',icon:'🏃',sub:['开始一种运动','换掉旧装备','健身 / 跑步','徒步 / 户外活动']},
- work:{label:'通勤 / 学习',icon:'🎒',sub:['上班通勤','办公室使用','上学 / 学习','在家办公']},
- travel:{label:'旅行 / 出行',icon:'🧳',sub:['周末短途','较长时间旅行','探亲 / 出差','整理随身物品']},
- kitchen:{label:'厨房 / 饮食',icon:'🍳',sub:['日常做饭','咖啡 / 茶饮','厨房收纳','补食品或耗材']},
- care:{label:'个人洗护',icon:'🫧',sub:['常用品补货','替换不好用的','整理洗漱用品','出门携带']},
- gifts:{label:'送礼 / 聚会',icon:'🎁',sub:['生日 / 节日','探望亲友','准备聚会','感谢或纪念']},
+ baby:{label:'母婴 / 育儿',icon:'🧸',sub:['即将 / 刚迎来宝宝','孩子长大，旧用品不合适了','常用品快用完了','准备带孩子出门']},
+ moving:{label:'搬家 / 安家',icon:'🏠',sub:['刚搬家，缺一些东西','准备搬家，提前添置','家里收纳空间不够','旧家具 / 用品需要换']},
+ pets:{label:'宠物生活',icon:'🐾',sub:['刚养 / 准备养宠物','粮食或耗材快用完了','旧用品不好用','准备带宠物出门']},
+ daily:{label:'日常生活',icon:'🧺',sub:['日用品快用完了','旧的坏了 / 不好用','换季，需要添置','一直有个生活小麻烦']},
+ sports:{label:'运动 / 户外',icon:'🏃',sub:['刚开始一种运动','旧装备损坏 / 不合适','已经约好运动或户外活动','想提高使用舒适度']},
+ work:{label:'通勤 / 学习',icon:'🎒',sub:['开始上班 / 上学','通勤方式变了','开始在家办公','原来的用品不够用']},
+ travel:{label:'旅行 / 出行',icon:'🧳',sub:['已经计划好旅行','即将出差 / 探亲','旧行李用品不好用','需要更轻便地出门']},
+ kitchen:{label:'厨房 / 饮食',icon:'🍳',sub:['开始自己做饭','食品 / 耗材快用完了','旧厨具不好用','厨房空间不够用']},
+ care:{label:'个人洗护',icon:'🫧',sub:['常用品快用完了','现在用的体验不好','季节 / 生活习惯变了','准备出门，需要便携装']},
+ gifts:{label:'送礼 / 聚会',icon:'🎁',sub:['亲友生日 / 节日快到了','准备探望亲友','已经计划好聚会','想表达感谢或纪念']},
  other:{label:'其他场景',icon:'✎',sub:[]}
 };
+
+const orderStateLabels={unknown:'订单状态未填',completed:'已买到 / 保留了',refunded:'退货 / 退款了',cancelled:'取消 / 未付款',pending:'还在等收货'};
+// 截图只帮助用户核对；对象 URL 不进入研究导出、不上传，也不据此自动核验购买。
+let orderPreviews=[];
+function clearOrderPreviews(){orderPreviews.forEach(x=>URL.revokeObjectURL(x.url));orderPreviews=[];$('order-images').value='';renderOrderPreviews();}
+function renderOrderPreviews(){
+ $('order-image-list').replaceChildren(...orderPreviews.map((x,i)=>{const box=document.createElement('div');box.className='order-preview';const img=document.createElement('img');img.src=x.url;img.alt='本地订单截图 '+(i+1);img.addEventListener('error',()=>{img.hidden=true;label.textContent='截图 '+(i+1)+' 无法显示，请移除后重新选择';});const label=document.createElement('span');label.textContent='截图 '+(i+1)+' · 仅本地';const remove=document.createElement('button');remove.type='button';remove.className='ghost';remove.textContent='移除截图 '+(i+1);remove.addEventListener('click',()=>{URL.revokeObjectURL(x.url);orderPreviews=orderPreviews.filter(y=>y!==x);renderOrderPreviews();});box.append(img,label,remove);return box;}));
+}
+
 const historyLabels={bought:{unknown:'购买情况未填',self:'我买过',others:'别人买的',no:'没买过',unsure:'记不清是否买过'},used:{unknown:'使用情况未填',yes:'用过',no:'没用过',unsure:'记不清是否用过'},rating:{unknown:'暂不评价',like:'喜欢',neutral:'一般',dislike:'不喜欢'},repeat:{unknown:'复购未明确',yes:'又买过同款',no:'未复购'}};
 let selectedLife=null,selectedSub=null,pastItems=[],historyEditId=null,historyNextId=1,historyStatus='not_answered',historyBaseline=null;
-function lifeContext(){return {id:selectedLife,label:lifeScenes[selectedLife]?.label||'自定义场景',detail:selectedSub||null,other:$('life-other').value.trim()};}
+function lifeContext(){return {id:selectedLife,label:lifeScenes[selectedLife]?.label||'自定义场景',detail:selectedSub||null,other:$('life-other').value.trim(),reason:[selectedSub,$('life-other').value.trim()].filter(Boolean).join('；')};}
+function lifeContextComplete(){return Boolean((selectedLife&&selectedSub)||$('life-other').value.trim());}
 function lifeText(){const c=lifeContext();return [c.label,c.detail,c.other].filter(Boolean).join(' · ');}
 function renderLife(){
  $('life-grid').replaceChildren(...Object.entries(lifeScenes).map(([id,c])=>{const b=document.createElement('button');b.className='scene-card life-card';b.type='button';b.setAttribute('aria-pressed',String(selectedLife===id));b.innerHTML='<span class="icon" aria-hidden="true">'+c.icon+'</span><strong>'+esc(c.label)+'</strong>';
@@ -236,13 +249,12 @@ function renderLife(){
  $('life-detail').hidden=!selectedLife||!lifeScenes[selectedLife].sub.length;
  $('life-subscenes').replaceChildren(...(lifeScenes[selectedLife]?.sub||[]).map(label=>{const b=document.createElement('button');b.className='secondary subscene';b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(selectedSub===label));b.addEventListener('click',()=>{selectedSub=selectedSub===label?null:label;record('life_detail_selected',{detail:selectedSub});renderLife();updateData();});return b;}));
 }
-function historyDraft(){return {name:$('past-item').value.trim(),bought:$('past-bought').value,used:$('past-used').value,rating:$('past-rating').value,reason:$('past-reason').value.trim(),approximateTime:$('past-time').value.trim(),repeat:$('past-repeat').value,recipient:$('past-recipient').value,reference:$('past-link').value.trim()};}
-function historyDirty(){const d=historyDraft();return Boolean(historyEditId||d.name||d.reason||d.approximateTime||d.reference||[d.bought,d.used,d.rating,d.repeat,d.recipient].some(v=>v!=='unknown'));}
+function historyDraft(){return {name:$('past-item').value.trim(),bought:$('past-order-state').value==='cancelled'?'no':'self',used:'unknown',orderState:$('past-order-state').value,rating:$('past-rating').value,reason:$('past-reason').value.trim(),approximateTime:$('past-time').value.trim(),repeat:$('past-repeat').value,recipient:$('past-recipient').value,reference:$('past-link').value.trim()};}
+function historyDirty(){const d=historyDraft();return Boolean(historyEditId||d.name||d.reason||d.approximateTime||d.reference||[d.orderState,d.rating,d.repeat,d.recipient].some(v=>v!=='unknown'));}
 function resetHistoryEditor(){historyEditId=null;$('history-form').reset();$('history-error').hidden=true;$('history-save').textContent='记下这件';$('history-cancel').textContent='清空这件';$('history-more').open=false;}
 function saveHistory(){
  const d=historyDraft();let error='';
  if(!d.name)error='先写商品名称；记不全可只写品牌或类别。';
- else if(d.rating!=='unknown'&&d.used!=='yes')error='如果用过，请选“用过”；没用过的先不评价使用感受。';
  if(error){$('history-error').textContent=error;$('history-error').hidden=false;return false;}
  const old=pastItems.find(x=>x.id===historyEditId);
  const item={...d,id:historyEditId||'history-'+historyNextId++,context:old?old.context:lifeContext(),reportedAt:NOW(),provenance:'self_report',verification:'unverified',catalogItemId:null,matchStatus:'unmatched',historicalCandidates:null,historicalExposure:null,decisionSource:'unknown'};
@@ -250,10 +262,10 @@ function saveHistory(){
  record(old?'history_updated':'history_added',{previous:old||null,item});historyStatus='provided';resetHistoryEditor();renderHistory();updateData();return true;
 }
 function renderHistory(){
- $('history-context').textContent=lifeText()+'。想起几件就记几件，不限于最近一次。';
- $('history-list').replaceChildren(...pastItems.map(item=>{const box=document.createElement('div');box.className='past-card';box.innerHTML='<div class="past-title"><strong>'+esc(item.name)+'</strong><span class="tag">'+esc(historyLabels.rating[item.rating])+'</span></div><p class="small">'+esc(historyLabels.bought[item.bought]+' · '+historyLabels.used[item.used])+'</p>'+(item.reason?'<p>'+esc(item.reason)+'</p>':'')+'<p class="hint">'+esc([item.approximateTime,item.context.label].filter(Boolean).join(' · '))+'</p>';
+ $('history-context').textContent='回忆与这个场景有关的购买。第一次买、没有历史也没关系。';
+ $('history-list').replaceChildren(...pastItems.map(item=>{const box=document.createElement('div');box.className='past-card';box.innerHTML='<div class="past-title"><strong>'+esc(item.name)+'</strong><span class="tag">'+esc(historyLabels.rating[item.rating])+'</span></div><p class="small">'+esc(orderStateLabels[item.orderState]||'订单状态未填')+'</p>'+(item.reason?'<p>'+esc(item.reason)+'</p>':'')+'<p class="hint">'+esc([item.approximateTime,item.context.label].filter(Boolean).join(' · '))+'</p>';
  const actions=document.createElement('div');actions.className='past-actions';
- const edit=document.createElement('button');edit.type='button';edit.className='ghost';edit.textContent='修改';edit.addEventListener('click',()=>{if(historyDirty()&&!saveHistory())return;historyEditId=item.id;const mapping={'past-item':'name','past-bought':'bought','past-used':'used','past-rating':'rating','past-reason':'reason','past-time':'approximateTime','past-repeat':'repeat','past-recipient':'recipient','past-link':'reference'};Object.entries(mapping).forEach(([id,k])=>$(id).value=item[k]);$('history-save').textContent='保存修改';$('history-cancel').textContent='取消修改';$('past-item').focus();});
+ const edit=document.createElement('button');edit.type='button';edit.className='ghost';edit.textContent='修改';edit.addEventListener('click',()=>{if(historyDirty()&&!saveHistory())return;historyEditId=item.id;const mapping={'past-item':'name','past-order-state':'orderState','past-rating':'rating','past-reason':'reason','past-time':'approximateTime','past-repeat':'repeat','past-recipient':'recipient','past-link':'reference'};Object.entries(mapping).forEach(([id,k])=>$(id).value=item[k]);$('history-save').textContent='保存修改';$('history-cancel').textContent='取消修改';$('past-item').focus();});
  const remove=document.createElement('button');remove.type='button';remove.className='ghost';remove.textContent='移除';remove.addEventListener('click',()=>{record('history_removed',{item});pastItems=pastItems.filter(x=>x.id!==item.id);if(historyEditId===item.id)resetHistoryEditor();historyStatus=pastItems.length?'provided':'not_answered';renderHistory();updateData();});
  actions.append(edit,remove);box.append(actions);return box;}));
  $('history-skip').hidden=pastItems.length>0;
@@ -262,7 +274,7 @@ function leaveHistory(skipped=false){
  if(historyDirty()&&!saveHistory())return;
  historyStatus=pastItems.length?'provided':(skipped?'cannot_recall':'no_entries');
  historyBaseline=copy({context:lifeContext(),items:pastItems,status:historyStatus,capturedAt:NOW()});record('history_submitted',historyBaseline);
- $('current-context').textContent=lifeText()+'。这次有什么需要补充或解决？';
+ $('current-context').textContent='这次具体想添什么？补货、替换，或第一次买都可以。';
  setStep(1);
 }
 
@@ -271,7 +283,7 @@ const otherChoiceLabels = {neither:'两个都不合适',either:'都可以，没�
 const originalLabels = {want:'原本想买什么',reason:'为什么现在想买',budget:'原来的预算',timing:'原定时间',stage:'目前阶段',withoutStudy:'没有研究时的打算'};
 const notes = {
   life:{title:'场景由用户自己选择',text:'先问真实生活情况，不指定必须购买的商品。',items:['一次围绕一个场景，可以返回更换。','场景选择只是自报，不证明购买意愿。','母婴、宠物等不采集健康诊断或身份信息。']},
-  history:{title:'过去购买与长期偏好分开',text:'买过、用过和喜不喜欢分别记录。',items:['具体商品尚未匹配商品库，标记为自报、未核验。','不编造历史候选集合或浏览顺序。','可用于讨论偏好初始化；不能代替完整历史会话。']},
+  history:{title:'订单回忆不等于完整购买日志',text:'先对照订单确认商品，使用评价可跳过。',items:['截图仅本地预览，未做 OCR；人工填写仍为自报、未核验。','不编造历史候选集合或浏览顺序。','可用于讨论偏好初始化；不能代替完整历史会话。']},
   1:{title:'记录商品选项引导前的原话',text:'预算和购买打算也先记录，避免先看示例价格再反推自己的计划。',items:['不提前安排真人或 Agent 条件。','此时已选场景、回忆历史；记录这些提示，再保存这次需求。','后续修改另记；“会买”的自报并非真实性标签。']},
   2:{title:'从商品类别走到实际场景',text:'按明确关键词建议类别，由用户核对；场景卡帮助回忆实际用途。',items:['水杯、耳机、背包有专用模板，其他类别走通用入口。','可以多选、补写或全部跳过；不默认选中任何场景。','模板是研究者提供的提示，其答案不能冒充自发原话。']},
   3:{title:'把偏好与底线分开',text:'本页只问明确不能接受的条件；一般偏好留给后面的取舍。',items:['未点选保留为未知，不代表能接受。','点击“不能接受”即是明确声明；最后再统一确认需求卡。','直接询问底线，不从拒绝某个商品推断其所有属性。']},
@@ -303,10 +315,11 @@ function shuffled(values) {
 function sceneNames(){return templates[category].scenes.filter(s=>sceneIds.has(s[0])).map(s=>s[2]);}
 function constraintDraft(){return templates[category].avoids.map(([id,label])=>({id,label,answer:avoidAnswers[id]||'unknown',hardConfirmed:avoidAnswers[id]==='hard',confirmationSource:avoidAnswers[id]==='hard'?'direct_cannot_accept_selection':null}));}
 function makeDraft(){return {lifeContext:lifeContext(),reportedHistory:copy(pastItems),historyStatus,historyBeforeCurrentNeed:copy(historyBaseline),initialBeforeAttributeGuidance:original,currentWords:rawDraft(),category:{id:category,label:templates[category].label,confirmed:categoryConfirmed},guided:{scenes:sceneNames(),sceneIds:[...sceneIds],otherScene:$('scene-other').value.trim(),constraints:constraintDraft(),otherRequirements:$('constraint-other').value.trim(),comparisons:copy(comparisons),otherTradeoff:$('generic-tradeoff').value.trim()},finalNote:$('final-note').value.trim()};}
-function dataSnapshot(){return {prototypeVersion:'scenes-history-v1',notice:'研究讨论原型；以下仅在本页内存中。自报历史与真实购物轨迹分别保存。',researchOnly:{lifeContext:lifeContext(),reportedHistory:copy(pastItems),historyStatus,initialBeforeAttributeGuidance:original,currentDraft:makeDraft(),confirmedNeed:baseline,demonstrationRoute:route,events,feedbacks},RS_Agent_Input:{storefrontEvents:[],note:'尚未进入商城。问卷历史不是完整商城轨迹；偏好初始化尚未接入。当前需求、对话和实验条件不作为来源预测特征。'}};}
+function dataSnapshot(){return {prototypeVersion:'order-context-v2',notice:'研究讨论原型；以下仅在本页内存中。自报历史与真实购物轨迹分别保存。',researchOnly:{lifeContext:lifeContext(),reportedHistory:copy(pastItems),historyStatus,initialBeforeAttributeGuidance:original,currentDraft:makeDraft(),confirmedNeed:baseline,demonstrationRoute:route,events,feedbacks},RS_Agent_Input:{storefrontEvents:[],note:'尚未进入商城。问卷历史不是完整商城轨迹；偏好初始化尚未接入。当前需求、对话和实验条件不作为来源预测特征。'}};}
 function updateData(){$('data-preview').textContent=JSON.stringify(dataSnapshot(),null,2);}
 function setStep(next){
   step=next;
+  $('task-context').hidden=next==='life'||next==='none';$('task-context-scene').textContent=lifeContext().label;$('task-context-reason').textContent='为什么现在需要：'+(lifeContext().reason||'尚未说明');
   ['life','history',1,2,3,4,5,6].forEach(n=>$('step-'+n).hidden=n!==next);
   $('no-need-state').hidden=next!=='none';
   const phase=next==='life'?1:next==='history'?2:([1,2,3,4].includes(next)?3:([5,6].includes(next)?4:0));document.querySelectorAll('.progress li').forEach((li,i)=>{li.classList.toggle('current',i+1===phase);li.classList.toggle('done',phase>0&&i+1<phase);if(i+1===phase)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');});
@@ -387,7 +400,7 @@ function renderSummary(){
   const d=makeDraft(),g=d.guided,w=d.currentWords;
   const budget=w.budget||'预算未定';
   let content=section('生活场景','<p>'+esc(lifeText())+'</p>','life');
-  content+=section('过去买用','<p>'+esc(pastItems.length?pastItems.map(x=>x.name+'（'+historyLabels.bought[x.bought]+'、'+historyLabels.used[x.used]+'、'+historyLabels.rating[x.rating]+'）').join('；'):'尚未提供历史')+'</p>','history');
+  content+=section('过去买用','<p>'+esc(pastItems.length?pastItems.map(x=>x.name+'（'+(orderStateLabels[x.orderState]||'订单状态未填')+'、'+historyLabels.rating[x.rating]+'）').join('；'):'尚未提供历史')+'</p>','history');
   content+=section('这次想买', '<p class="summary-need">'+esc(w.want)+'</p><p class="small">'+esc(budget)+' · '+esc(w.timing||'时间未定')+'</p>'+(w.reason?'<p>'+esc(w.reason)+'</p>':''),1);
   content+=section('主要用途','<p>'+esc([...g.scenes,g.otherScene].filter(Boolean).join('、')||'还没确定')+'</p>',2);
   const hard=g.constraints.filter(c=>c.answer==='hard').map(c=>c.label);
@@ -459,11 +472,17 @@ $('restart').addEventListener('click',()=>{
   ['timing','purchase-stage','without-study'].forEach(id=>$(id).selectedIndex=0);
   $('confirm-card').checked=false;$('error-1').hidden=true;$('error-5').hidden=true;$('feedback-list').replaceChildren();$('feedback-status').textContent='';
   document.querySelectorAll('.optional-input').forEach(d=>d.open=false);$('category-editor').hidden=true;$('edit-category').setAttribute('aria-expanded','false');
-  original=null;baseline=null;route=null;category='other';categoryGuess='other';categoryConfirmed=false;sceneIds=new Set();avoidAnswers={};pairQueue=[];pairIndex=0;pairSignature='';events=[];comparisons=[];feedbacks=[];selectedLife=null;selectedSub=null;pastItems=[];historyBaseline=null;historyStatus='not_answered';historyNextId=1;$('life-other').value='';resetHistoryEditor();renderLife();renderHistory();setStep('life');
+  original=null;baseline=null;route=null;category='other';categoryGuess='other';categoryConfirmed=false;sceneIds=new Set();avoidAnswers={};pairQueue=[];pairIndex=0;pairSignature='';events=[];comparisons=[];feedbacks=[];selectedLife=null;selectedSub=null;pastItems=[];historyBaseline=null;historyStatus='not_answered';historyNextId=1;$('life-other').value='';clearOrderPreviews();resetHistoryEditor();renderLife();renderHistory();setStep('life');
 });
 ['scene-other','constraint-other','generic-tradeoff','final-note'].forEach(id=>$(id).addEventListener('change',()=>{record('free_text_change',{field:id,value:$(id).value.trim()});updateData();}));
 
-$('life-next').addEventListener('click',()=>{if(!selectedLife&&!$('life-other').value.trim()){$('life-error').hidden=false;return;}$('life-error').hidden=true;record('life_context_confirmed',lifeContext());renderHistory();setStep('history');});
+$('order-images').addEventListener('change',()=>{
+ const files=[...$('order-images').files];const errors=[];
+ for(const file of files){if(!['image/png','image/jpeg','image/webp'].includes(file.type)){errors.push('请选择 PNG、JPG 或 WebP 图片。');continue;}if(file.size>8*1024*1024){errors.push('单张图片请小于 8 MB。');continue;}if(orderPreviews.length>=3){errors.push('最多预览 3 张，移除后可换图。');continue;}orderPreviews.push({url:URL.createObjectURL(file)});}
+ $('order-images').value='';$('order-image-error').textContent=[...new Set(errors)].join(' ');$('order-image-error').hidden=!errors.length;renderOrderPreviews();
+});
+$('change-life').addEventListener('click',()=>{if(step==='history'&&historyDirty()&&!saveHistory())return;renderLife();setStep('life');});
+$('life-next').addEventListener('click',()=>{if(!lifeContextComplete()){$('life-error').hidden=false;return;}$('life-error').hidden=true;record('life_context_confirmed',lifeContext());renderHistory();setStep('history');});
 $('history-form').addEventListener('submit',e=>{e.preventDefault();saveHistory();});
 $('history-cancel').addEventListener('click',()=>{resetHistoryEditor();});
 $('history-next').addEventListener('click',()=>leaveHistory(false));$('history-skip').addEventListener('click',()=>leaveHistory(true));

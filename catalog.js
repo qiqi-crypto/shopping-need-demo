@@ -11,7 +11,8 @@ const cnyReference = p => p.currency==='USD' && fxReference ? '≈ ¥'+(p.price*
 const ratingLabel = p => Number.isFinite(p.rating) && p.rating > 0 ? `★ ${p.rating.toFixed(1)}${p.rating_count ? ' · '+p.rating_count+' 个评分' : ''}` : '';
 const attributesOf = p => Object.fromEntries(Object.entries(p.attributes||{}).filter(([k,v])=>k && Array.isArray(v) && v.some(x=>String(x).trim())));
 const itemMap = new Map(allItems.map(p => [p.id, p]));
-const SCENES = {baby:'🧸 母婴',pets:'🐾 宠物',moving:'🏠 搬家',sports:'🏃 运动'};
+const SCENES = {baby:'母婴用品',pets:'宠物生活',moving:'搬家家居',sports:'运动户外'};
+const SCENE_COPY = {baby:['母婴好物','从喂养到出行，给成长中的每一天多一点准备。'],pets:['宠物生活','吃饭、玩耍、出门，照顾它的日常小事。'],moving:['住进喜欢的生活','收纳、清洁与家居用品，让新家一点点有模样。'],sports:['准备好，动起来','从日常锻炼到户外出行，找到顺手的运动装备。']};
 const STORE_KEY = 'rs_m5_store_v1';
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 let storageOkay = true;
@@ -29,7 +30,7 @@ function startSession() {
  const previous=db.sessions.at(-1), now=new Date().toISOString();
  session={session_id:'session-'+uid(),user_id:db.user_id,started_at:now,
   session_gap_seconds:previous ? (Date.parse(now)-Date.parse(previous.started_at))/1000 : null,
-  catalog_version:window.M5_CATALOG.version,events:[],consideration_steps:[],final_selection:null,
+  catalog_version:window.M5_CATALOG.version,interface_version:'storefront-20261109',events:[],consideration_steps:[],final_selection:null,
   purchase:{status:'not_observed',item_id:null},status:'open',anchor_source:null,
   research_only:{questionnaire:researchContext,operator_verification:'unverified',agent_connected:false}};
  db.sessions.push(session);save();
@@ -51,6 +52,7 @@ function consider(id,reason,snapshot=displayState()) {
   availability_definition:'rendered_current_page_or_explicit_comparison_set',controls:record.controls});save();
 }
 function renderSceneTabs() {
+ $('scene-heading').textContent=SCENE_COPY[scene][0];$('scene-description').textContent=SCENE_COPY[scene][1];
  $('scene-tabs').innerHTML=Object.entries(SCENES).map(([id,label])=>`<button data-scene="${id}" aria-pressed="${scene===id}">${label} <small>· ${allItems.filter(p=>p.scene===id).length}</small></button>`).join('');
  $('scene-tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(!activeSession())return;scene=b.dataset.scene;group='';query='';$('query').value='';page=1;event('scene_filter',{scene});render();});
 }

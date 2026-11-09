@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>把需求说清楚 · RS_Agent 卡片式购物入口</title>
+  <title>我的购买需求 · 生活选物</title>
   <style>
     :root{--ink:#253d36;--muted:#68746d;--green:#285b4a;--line:#dce1d6;--paper:#fffef9;--bg:#f3f3eb;--soft:#e8eee1;--orange:#ab663b;--radius:22px}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,input,textarea,select{font:inherit}button,a,input,textarea,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #bc8849;outline-offset:4px}button:disabled{opacity:.5;cursor:not-allowed}[hidden]{display:none!important}a{color:var(--green)}
@@ -24,12 +24,17 @@
 @media(max-width:540px){.life-grid{grid-template-columns:repeat(2,1fr)}.life-card strong{font-size:15px}.history-editor{padding:14px}.history-cols{grid-template-columns:1fr 1fr}.history-cols>.field:last-child{grid-column:1/-1}.progress{grid-template-columns:repeat(4,1fr);gap:4px}.progress li{font-size:10px;gap:3px}.progress span{width:18px;height:18px}.body{padding:22px 18px}}
 
 .task-context{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:#eaf1e9;border-left:4px solid var(--green);border-radius:12px;padding:15px 17px;margin-bottom:25px}.task-context small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.task-context strong{display:block;font-size:18px}.task-context p{margin:7px 0 0;font-size:14px;line-height:1.6;overflow-wrap:anywhere}.task-context .ghost{flex-shrink:0}.order-intro{margin:16px 0 22px;padding:15px;border:1px solid var(--line);border-radius:12px}.order-intro p{font-size:13px;margin:8px 0;line-height:1.6}.order-intro strong{font-size:14px}.order-image-list{display:grid;gap:12px;margin-top:12px}.order-preview{display:grid;gap:7px;justify-items:start}.order-preview img{width:100%;max-height:420px;object-fit:contain;border:1px solid var(--line);background:white}.order-preview span{font-size:12px;color:var(--muted)}#order-images{max-width:100%;font-size:13px}#task-context[hidden]{display:none}
+
+/* Match the shopping storefront while preserving the questionnaire flow. */
+:root{--ink:#292929;--muted:#777;--green:#e95514;--line:#e7e7e7;--paper:#fff;--bg:#f6f6f6;--soft:#fff0e5;--orange:#db581a;--radius:10px}
+header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180px)/2));border-bottom:2px solid var(--green)}.brand strong{font-size:23px;color:var(--green)}.brand .mark{border-radius:7px}.panel{box-shadow:none}.scene-card,.life-card,.history-editor,.past-card,.secondary,.primary{border-radius:6px}.scene-card[aria-pressed=true],.life-card[aria-pressed=true],.pair-card.selected{background:#fff4eb;border-color:var(--green)}.history-editor{background:#fafafa}.task-context,.notice,.research .note{background:#fff5ed;color:#835333}.progress{background:#fafafa}.top-action{border-radius:5px;border-color:#ddd}.intro{padding-top:16px}.intro h1{font-size:28px}.brand small{font-size:11px}.task-context{border-radius:5px}.primary:hover{background:#cf470b}.scene-card:hover,.life-card:hover{border-color:#f3a078;background:#fff8f2}
+@media(max-width:540px){header{padding:16px}.brand strong{font-size:20px}.intro h1{font-size:25px}}
   </style>
 
 </head>
 <body>
 <header>
-  <div class="brand"><div class="mark" aria-hidden="true">R</div><div><strong>把需求说清楚</strong><small>RS_Agent · 卡片式购物入口</small></div></div>
+  <div class="brand"><div class="mark" aria-hidden="true">选</div><div><strong>生活选物</strong><small>我的购买需求</small></div></div>
   <div style="display:flex;gap:12px;align-items:center"><a href="catalog.html" style="font-size:13px">先看看商品</a><button class="top-action" id="view-toggle" aria-pressed="false">研究说明</button></div>
 </header>
 <main class="wrap">

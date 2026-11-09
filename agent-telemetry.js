@@ -3,7 +3,11 @@
  const h=new URLSearchParams(location.hash.slice(1));let run=h.get('agent_run'),token=h.get('write_token');
  if(run&&token){sessionStorage.setItem('rs_agent_observer',JSON.stringify({run,token}));history.replaceState({},'',location.pathname+location.search);}
  else{try{const saved=JSON.parse(sessionStorage.getItem('rs_agent_observer'));run=saved?.run;token=saved?.token;}catch{}}
- if(run&&token)document.documentElement.dataset.agentBrowser='true';
+ if(run&&token){
+ document.documentElement.dataset.agentBrowser='true';
+ const pointer=document.createElement('div');pointer.setAttribute('aria-hidden','true');pointer.style.cssText='display:none;position:fixed;z-index:2147483647;pointer-events:none;color:#ee5816;font-size:24px;filter:drop-shadow(0 1px 2px white)';pointer.innerHTML='➤<span style="font:12px system-ui;background:white;padding:3px;border-radius:4px">上次点击</span>';
+ document.addEventListener('click',e=>{if(!e.isTrusted||(!e.clientX&&!e.clientY))return;window.rsLastPointer={x:e.clientX,y:e.clientY,at:new Date().toISOString(),kind:'actual_click',label:(e.target.closest('button,a')?.textContent||'页面').trim().slice(0,60)};pointer.style.display='block';pointer.style.left=e.clientX+'px';pointer.style.top=e.clientY+'px';const host=document.querySelector('dialog[open]')||document.body;host.append(pointer);setTimeout(()=>{(document.querySelector('dialog[open]')||document.body).append(pointer);},0);},true);
+ }
  const prefix='rs_event_outbox_v2:';let busy=false;
  function queued(){const q=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k?.startsWith(prefix)){try{q.push(JSON.parse(localStorage.getItem(k)));}catch{}}}return q.sort((a,b)=>a.record.at.localeCompare(b.record.at)||a.record.event_id-b.record.event_id);}
  function owner(){return run?'run:'+run:window.rsIdentity?.get()?.participant_id;}

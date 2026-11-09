@@ -31,11 +31,11 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
 @media(max-width:540px){header{padding:16px}.brand strong{font-size:20px}.intro h1{font-size:25px}}
   </style>
 
-</head>
+<style>#demo-switch,#route-card,#route-intro,#demo-switch-help~details,#step-6>.field,#step-6>.notice,#step-6>.actions,#view-toggle{display:none!important}</style></head>
 <body>
 <header>
   <div class="brand"><div class="mark" aria-hidden="true">选</div><div><strong>生活选物</strong><small>我的购买需求</small></div></div>
-  <div style="display:flex;gap:12px;align-items:center"><a href="catalog.html" style="font-size:13px">先看看商品</a><button class="top-action" id="view-toggle" aria-pressed="false">研究说明</button></div>
+  <div style="display:flex;gap:12px;align-items:center"><button class="top-action" id="view-toggle" aria-pressed="false">研究说明</button></div>
 </header>
 <main class="wrap">
   <div class="intro"><h1>找到适合你的。</h1><p>从真实生活出发，先聊过去，再说这次。</p></div>
@@ -123,8 +123,8 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
         <section id="step-6" aria-labelledby="title-6" hidden>
           <div class="success-icon" aria-hidden="true">✓</div><div class="step-label">已确认 · 购物流程预览</div><h2 id="title-6" tabindex="-1">按你的需求，进入购物。</h2><p class="lead" id="route-intro"></p>
           <div class="notice" id="eligibility-note" hidden></div><div class="card" id="route-card"></div>
-          <div class="switcher" id="demo-switch" aria-label="演示操作方式"><button id="show-human">预览真人流程</button><button id="show-agent">预览 Agent 流程</button></div><p class="small" id="demo-switch-help">下面可进入商品库自行试逛。Agent 仍是流程演示，未连接真实 Agent 或订单。</p>
-          <button class="primary" id="enter-catalog">按这个场景，看看商品 →</button>
+          <div class="switcher" id="demo-switch" aria-label="演示操作方式"><button id="show-human">预览真人流程</button><button id="show-agent">预览 Agent 流程</button></div><p class="small" id="demo-switch-help">进入前会说明购物车和最终选择方式；系统随机安排本次购物方式。</p>
+          <button class="primary" id="enter-catalog">阅读购物说明，开始 →</button>
           <details><summary>查看确认后的需求记录</summary><pre id="frozen-card"></pre></details>
           <div class="field"><label for="feedback">购物中又想到新的要求？<span class="optional">仅演示</span></label><textarea id="feedback" maxlength="600" placeholder="补充、纠正、要求重新比较，或者决定不买，都可以。"></textarea><button class="secondary" id="add-feedback" style="margin-top:10px">记录这次补充</button><p id="feedback-status" class="hint" role="status"></p><ul class="feedback-list" id="feedback-list"></ul></div>
           <div class="notice">新的补充另存，不覆盖此前的需求。需求卡和对话不直接输入只看商城痕迹的 RS_Agent 模型。</div>
@@ -145,7 +145,7 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
       <div class="note"><div class="note-kicker">可回溯的数据边界</div><div class="data-grid"><div class="data-row"><strong>研究侧</strong>生活场景、自报购买与使用记录、当前需求、卡片选择与修改。</div><div class="data-row"><strong>Agent 侧</strong>被委托时接收用户确认的需求和后续反馈；跳过的内容不是偏好。</div><div class="data-row"><strong>RS_Agent 平台模型</strong>问卷历史单独保存，待确认偏好初始化方案；当前任务、对话和来源标签不作为来源识别特征。真实商城轨迹另记。</div></div><details><summary>查看本次演示记录</summary><pre id="data-preview"></pre><button class="secondary" id="download-record">下载本次演示记录</button><p class="hint">只下载到你自己的设备，不上传服务器。</p></details></div>
     </aside>
   </div>
-  <p class="footer">演示版 · 历史仅保留在当前页面，刷新即清空。未连接商品库、账号或商城。<br><a href="index-before-guided.html" class="quiet-link">原版</a></p>
+  <p class="footer">演示版 · 需求确认后进入购物说明。浏览与对话按实验说明记录。<br></p>
 </main>
 <script>
 'use strict';
@@ -466,8 +466,8 @@ $('next-4').addEventListener('click',()=>{persistReason();if(pairQueue.length&&!
 $('finish-comparison').addEventListener('click',()=>{if(pairQueue.length)savePairChoice('skip','explicit_skip');record('comparison_skipped',{from:4});toSummary();});
 $('choice-reason').addEventListener('change',()=>{persistReason();updateData();});
 $('other-choices').querySelectorAll('[data-choice]').forEach(b=>b.addEventListener('click',()=>savePairChoice(b.dataset.choice)));
-$('confirm-next').addEventListener('click',()=>{if(!$('confirm-card').checked){$('error-5').hidden=false;$('confirm-card').focus();return;}$('error-5').hidden=true;baseline=Object.freeze({...copy(makeDraft()),confirmedAt:NOW()});route=eligible(baseline)?(Math.random()<.5?'H':'A'):null;record('need_confirmed',{data:baseline});record('demo_route_assigned',{route,notFormalRandomization:true});renderRoute();setStep(6);});
-$('enter-catalog').addEventListener('click',()=>{const context={confirmedNeed:baseline,reportedHistory:copy(pastItems),feedbacks:copy(feedbacks),demonstrationRoute:route,notVerifiedSourceLabel:true};try{sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(context));}catch{}const scene=['baby','pets','moving','sports'].includes(selectedLife)?selectedLife:'baby';location.href='catalog.html?scene='+encodeURIComponent(scene);});
+$('confirm-next').addEventListener('click',()=>{if(!$('confirm-card').checked){$('error-5').hidden=false;$('confirm-card').focus();return;}$('error-5').hidden=true;baseline=Object.freeze({...copy(makeDraft()),confirmedAt:NOW()});route=null;record('need_confirmed',{data:baseline});record('demo_route_assigned',{route,notFormalRandomization:true});renderRoute();setStep(6);});
+$('enter-catalog').addEventListener('click',()=>{const context={confirmedNeed:baseline,reportedHistory:copy(pastItems),feedbacks:copy(feedbacks),demonstrationRoute:route,notVerifiedSourceLabel:true};try{sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(context));}catch{}const scene=['baby','pets','moving','sports'].includes(selectedLife)?selectedLife:'baby';location.href='participate.html?scene='+encodeURIComponent(scene);});
 $('show-human').addEventListener('click',()=>{route='H';record('demo_route_preview',{route});renderRoute();});$('show-agent').addEventListener('click',()=>{route='A';record('demo_route_preview',{route});renderRoute();});
 $('add-feedback').addEventListener('click',()=>{const text=$('feedback').value.trim();if(!text){$('feedback-status').textContent='可以不补充；需要记录时先写下内容。';return;}const item={text,time:NOW()};feedbacks.push(item);record('later_feedback',item);const li=document.createElement('li');li.textContent=text;$('feedback-list').append(li);$('feedback').value='';$('feedback-status').textContent='已另行记录，未覆盖确认时的需求。';updateData();});
 $('view-toggle').addEventListener('click',()=>{researchView=!researchView;$('research-notes').hidden=!researchView;$('layout').classList.toggle('participant',!researchView);$('view-toggle').textContent=(researchView?'收起说明':'研究说明');$('view-toggle').setAttribute('aria-pressed',String(researchView));if(step===6)renderRoute();});

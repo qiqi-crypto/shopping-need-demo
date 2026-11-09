@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>把需求说清楚 · RS_Agent 卡片式购物入口</title>
+  <style>
+    :root{--ink:#253d36;--muted:#68746d;--green:#285b4a;--line:#dce1d6;--paper:#fffef9;--bg:#f3f3eb;--soft:#e8eee1;--orange:#ab663b;--radius:22px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,input,textarea,select{font:inherit}button,a,input,textarea,select{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #bc8849;outline-offset:4px}button:disabled{opacity:.5;cursor:not-allowed}[hidden]{display:none!important}a{color:var(--green)}
+    header{max-width:1240px;margin:auto;padding:26px 30px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px}.mark{width:38px;height:38px;border-radius:12px;background:var(--green);color:white;display:grid;place-items:center;font-weight:700}.brand strong{font-size:17px}.brand small{display:block;color:var(--muted);font-size:12px}.top-action{background:transparent;border:1px solid #bac8b9;border-radius:30px;padding:9px 16px;font-size:13px;color:var(--green)}
+    .wrap{max-width:1180px;margin:16px auto 60px;padding:0 24px}.intro{padding:8px 0 22px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:2px;font-weight:700;color:var(--green)}h1{font-size:clamp(28px,3vw,38px);line-height:1.4;letter-spacing:-.7px;margin:8px 0 10px}.intro p{margin:0;color:var(--muted);max-width:790px}.layout{display:grid;grid-template-columns:minmax(0,760px) minmax(260px,1fr);gap:24px;align-items:start}.layout.participant{grid-template-columns:minmax(0,820px);justify-content:center}.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 12px 30px #263e3110}.progress{display:flex;list-style:none;margin:0;padding:23px 28px;border-bottom:1px solid var(--line);gap:12px}.progress li{flex:1;display:flex;gap:7px;align-items:center;font-size:13px;color:#7c857c;white-space:nowrap}.progress span{border:1px solid #c9d1c4;border-radius:50%;width:25px;height:25px;display:grid;place-items:center;font-size:11px;flex-shrink:0}.progress li.current{color:var(--green);font-weight:700}.progress li.current span{color:white;background:var(--green);border-color:var(--green)}.progress li.done span{background:var(--soft);border-color:var(--soft);color:var(--green)}.body{padding:30px 34px 32px}.step-label{font-size:12px;color:var(--orange);font-weight:700;letter-spacing:1px}h2{font-size:25px;line-height:1.45;margin:7px 0 8px}h3{font-size:17px;margin:0 0 10px}.lead{color:var(--muted);font-size:14px;margin:0 0 25px}.field{margin:22px 0}.field label,.legend{display:block;font-size:15px;font-weight:600;margin-bottom:8px}.hint{font-size:12px;color:var(--muted);margin:7px 0 0}textarea,input[type="text"],input[type="number"],select{width:100%;border:1px solid #cbd4c8;border-radius:12px;background:white;color:var(--ink);padding:12px 14px}textarea{resize:vertical;min-height:96px;line-height:1.65}textarea::placeholder,input::placeholder{color:#8a948a}select{height:50px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}.optional{font-weight:400;font-size:12px;color:var(--muted);margin-left:8px}.primary{border:1px solid var(--green);background:var(--green);color:white;border-radius:12px;padding:12px 22px;font-weight:600}.secondary{border:1px solid #c7d1c2;color:var(--green);background:transparent;border-radius:12px;padding:12px 18px}.text-btn{background:none;border:0;padding:8px 0;color:var(--muted);font-size:13px;text-decoration:underline;text-underline-offset:4px}.actions{display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:28px;flex-wrap:wrap}.actions-right{display:flex;gap:10px}.notice{border-left:3px solid #9daf94;background:#f0f3e9;padding:12px 16px;font-size:13px;color:#52614e;border-radius:0 8px 8px 0}.error{color:#9b3c2d;background:#fff0e9;border-radius:8px;padding:9px 12px;font-size:14px;margin-top:16px}.research{position:sticky;top:20px}.research .note{border:1px solid #d5ddcc;border-radius:18px;padding:22px;background:#eaf0e3;margin-bottom:16px}.note-kicker{font-size:11px;letter-spacing:1px;color:#697f5c;font-weight:700}.note p{font-size:14px;margin:9px 0;color:#51634d}.note ol{padding-left:20px;font-size:13px;margin:12px 0}.note li{margin-bottom:9px}.chip{display:inline-block;font-size:11px;background:#dfe8d5;border-radius:20px;padding:3px 10px;margin-bottom:12px}.note .plain{font-size:12px;border-top:1px solid #ccd8c3;padding-top:12px}.card{border:1px solid var(--line);border-radius:15px;padding:18px 20px;margin:16px 0;background:#fafbf5}.card dl{margin:0}.card dt{font-size:12px;color:var(--muted);margin-top:14px}.card dt:first-child{margin-top:0}.card dd{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}.row-check{display:flex;align-items:flex-start;gap:10px;font-size:14px;margin-top:22px}.row-check input{width:18px;height:18px;accent-color:var(--green);margin:5px 0;flex-shrink:0}.success-icon{width:55px;height:55px;background:var(--soft);color:var(--green);border-radius:50%;display:grid;place-items:center;font-size:25px;margin-bottom:18px}.route-title{display:flex;justify-content:space-between;gap:12px;align-items:center}.tag{font-size:12px;background:var(--soft);padding:4px 10px;border-radius:20px}.flow{padding:0;margin:15px 0 0;list-style:none;counter-reset:flow}.flow li{counter-increment:flow;position:relative;padding:0 0 18px 32px;font-size:14px}.flow li:before{content:counter(flow);position:absolute;left:0;top:2px;width:21px;height:21px;background:var(--soft);border-radius:50%;display:grid;place-items:center;font-size:11px}.flow li:after{content:"";position:absolute;left:10px;top:26px;bottom:3px;border-left:1px solid #d6dfcd}.flow li:last-child:after{display:none}.flow li strong{display:block}.flow li p{color:var(--muted);margin:2px 0 0}.switcher{display:flex;gap:8px;margin:14px 0}.switcher button{flex:1;border:1px solid #becbb5;border-radius:10px;background:transparent;padding:8px;font-size:12px;color:var(--green)}.switcher button.active{background:var(--green);color:white;border-color:var(--green)}details{border-top:1px solid var(--line);padding-top:14px;margin-top:18px;font-size:13px}summary{cursor:pointer;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f4ed;border-radius:10px;padding:14px;font:12px/1.8 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;max-height:370px;overflow:auto}.feedback-list{padding-left:20px;font-size:13px}.feedback-list li{margin-bottom:10px;white-space:pre-wrap;overflow-wrap:anywhere}.footer{margin:20px 0 0;text-align:center;color:#788174;font-size:12px}.small{font-size:12px;color:var(--muted)}.quiet-state{text-align:center;padding:40px 10px}.quiet-state .success-icon{margin:0 auto 20px}.quiet-state p{max-width:490px;margin:12px auto;color:var(--muted)}.data-grid{display:grid;gap:10px;margin-top:16px}.data-row{padding:10px 12px;background:#f5f7f0;border:1px solid #dbe2d4;border-radius:10px;font-size:12px}.data-row strong{display:block;color:var(--green)}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}.research{position:static}.research .note{margin-bottom:12px}.wrap{max-width:760px}.intro{padding-top:0}}
+    @media(max-width:540px){header{padding:18px 18px;align-items:flex-start}.brand strong{font-size:14px}.brand small{font-size:10px}.top-action{font-size:11px;padding:8px 11px}.wrap{padding:0 14px;margin-top:8px}.body{padding:24px 21px}.progress{padding:18px 15px;gap:6px}.progress li{font-size:11px;gap:4px}.progress span{width:20px;height:20px}.cols{grid-template-columns:1fr;gap:0}.field{margin:17px 0}.intro p{font-size:14px}.actions .primary{width:100%}.actions-right{width:100%}.actions-right .secondary{white-space:nowrap}h2{font-size:22px}}
+
+    .progress{flex-wrap:wrap;gap:10px 8px}.progress li{min-width:90px;font-size:12px}.scene-grid,.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.scene-card{position:relative;display:block;text-align:left;border:1px solid #d4ddcd;background:#fffefb;border-radius:15px;padding:18px;color:var(--ink);min-height:123px;transition:background .15s,border-color .15s}.scene-card:hover{background:#f1f5eb}.scene-card[aria-pressed=true]{border:2px solid var(--green);padding:17px;background:#edf3e7}.scene-card .icon{font-size:25px;display:block;margin-bottom:6px}.scene-card strong{display:block;font-size:15px}.scene-card small{display:block;font-size:12px;color:var(--muted);margin-top:3px}.scene-card .tick{position:absolute;right:13px;top:10px;color:var(--green);font-weight:bold}.mini-tag{display:inline-block;border:1px solid #d6dfcd;border-radius:20px;padding:3px 10px;font-size:11px;color:var(--green);background:#f4f7ed;margin-bottom:12px}.scope{font-size:13px;padding:12px 16px;background:#eef2e6;border-radius:10px;margin:14px 0}.scope strong{color:var(--green)}.avoid-row{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px;align-items:center;border-bottom:1px solid #e1e6db;padding:17px 0}.avoid-row label{font-size:15px;font-weight:600}.avoid-row small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:3px}.avoid-row select{font-size:13px;height:45px;padding:8px 10px}.pair-card{border:1px solid #cbd6c4;background:#fffefb;border-radius:17px;padding:22px;position:relative}.pair-card.selected{border:2px solid var(--green);padding:21px;background:#f1f6eb}.pair-card .option-label{font-size:11px;color:var(--orange);letter-spacing:1px;font-weight:700}.pair-card h3{font-size:20px;margin:5px 0 18px}.pair-card dl{margin:0}.pair-card dt{font-size:12px;color:var(--muted);margin-top:12px}.pair-card dd{margin:2px 0 0;font-size:16px}.pair-card button{width:100%;margin-top:22px}.pair-card.selected button{background:var(--green);color:white;border-color:var(--green)}.other-choices{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.other-choices button{font-size:12px;padding:9px 13px}.other-choices button[aria-pressed=true]{background:var(--soft);border-color:var(--green);color:var(--green)}.response-box{border:1px solid #d3ddca;border-radius:12px;padding:17px;background:#f4f7ef;margin-top:18px}.response-box label{font-weight:600;font-size:14px}.response-box textarea{margin-top:10px;min-height:72px;font-size:14px}.live-note{color:var(--green);font-size:13px;min-height:22px;margin-top:10px}.summary-section{margin:15px 0;padding:18px;border:1px solid #d9e0d2;border-radius:14px}.summary-section h3{font-size:15px}.summary-section p{font-size:14px;margin:7px 0;white-space:pre-wrap;overflow-wrap:anywhere}.summary-section ul{font-size:14px;margin:8px 0;padding-left:19px}.summary-section .origin{font-size:11px;color:var(--muted);display:block;margin-bottom:7px}.summary-section .edit-link{float:right;background:none;border:0;color:var(--green);font-size:12px;text-decoration:underline;padding:0 0 5px 8px}.mini-note{font-size:12px;color:var(--muted);margin:9px 0}.source-list{padding-left:18px;font-size:12px}.source-list li{margin:12px 0}.source-list a{font-weight:600}.research details p{font-size:12px}.quiet-link{color:var(--muted);font-size:12px}.steps-counter{color:var(--muted);font-size:12px}.actions-top{margin-top:17px}.custom-pair{border:1px dashed #bccbb0;border-radius:12px;padding:15px;margin-top:15px}.custom-pair textarea{min-height:72px}.ghost{font-size:12px;color:var(--muted);background:none;border:0;text-decoration:underline;padding:8px}.intro a{font-size:12px}.guidance-exit{text-align:center;margin-top:16px}.progress span{width:23px;height:23px}.row-check{margin-top:15px}
+    @media(max-width:540px){.progress{display:grid;grid-template-columns:repeat(3,1fr);row-gap:12px}.progress li{min-width:0}.scene-grid{gap:9px}.scene-card{padding:14px;min-height:130px}.scene-card[aria-pressed=true]{padding:13px}.scene-card strong{font-size:14px}.choice-grid{grid-template-columns:1fr}.avoid-row{grid-template-columns:1fr;gap:8px;padding:14px 0}.avoid-row select{width:100%}.pair-card{padding:18px}.pair-card.selected{padding:17px}.pair-card dl{display:grid;grid-template-columns:1fr 1fr;column-gap:10px}.pair-card dt,.pair-card dd{grid-column:auto;margin-top:8px}.pair-card dd{font-size:14px}.actions .secondary{font-size:13px}.actions{gap:12px}.summary-section{padding:15px}.summary-section .edit-link{float:none;display:block;margin-bottom:8px;padding:0}.research .note{padding:18px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .layout.participant{grid-template-columns:minmax(0,720px)}.intro{text-align:center;padding:8px 0 26px}.intro p{margin:0 auto}.intro h1{font-size:32px}.body{padding:28px 32px}.lead{margin-bottom:22px}.scene-card{min-height:106px;padding:18px}.scene-card[aria-pressed=true]{padding:17px}.scene-card strong{font-size:17px}.scene-card .icon{font-size:26px;margin-bottom:4px}.scene-grid{gap:12px}.category-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px;color:var(--muted);font-size:13px}.category-line .ghost{padding:0}#category-editor{margin-bottom:16px}.avoid-card{min-height:78px;display:flex;align-items:center;gap:12px}.avoid-mark{display:grid;place-items:center;width:26px;height:26px;flex-shrink:0;border:1px solid #bdc9b6;border-radius:50%;font-size:20px;line-height:1}.avoid-card[aria-pressed=true] .avoid-mark{background:var(--green);color:white;border-color:var(--green)}.optional-input{border:0;margin:17px 0 0;padding:0;color:var(--muted)}.optional-input summary{font-weight:400;font-size:13px}.optional-input input{margin-top:10px}.optional-input[open] summary{color:var(--green)}.guidance-exit{margin-top:10px}.pair-card{padding:20px}.pair-card.selected{padding:19px}.pair-card h3{font-size:21px;margin-bottom:15px}.pair-card dl{display:block}.pair-card dt{font-size:12px;margin-top:11px}.pair-card dd{font-size:18px;margin-top:0}.pair-card button{margin-top:18px}.other-choices{justify-content:center}.other-choices button{font-size:13px}.summary-section{margin:0;padding:16px 0;border:0;border-bottom:1px solid var(--line);border-radius:0}.summary-section h3{font-size:12px;color:var(--muted);font-weight:500;margin:0 0 5px}.summary-section p{font-size:16px;margin:0}.summary-section .summary-need{font-size:21px;font-weight:600}.summary-section .small{font-size:13px;color:var(--muted);margin-top:4px}.summary-section .edit-link{font-size:12px;padding-top:2px}.row-check{margin-top:24px}.footer{font-size:11px}#reason{min-height:65px}#need{min-height:78px}
+    @media(max-width:540px){.intro h1{font-size:27px}.body{padding:24px 20px}.scene-card strong{font-size:15px}.scene-card{min-height:99px}.avoid-card{min-height:80px;padding:14px;gap:8px}.avoid-card[aria-pressed=true]{padding:13px}.avoid-mark{width:22px;height:22px}.choice-grid{grid-template-columns:1fr 1fr;gap:10px}.pair-card{padding:15px}.pair-card.selected{padding:14px}.pair-card h3{font-size:17px}.pair-card dd{font-size:15px}.pair-card button{padding:10px 8px;font-size:13px}.summary-section .edit-link{float:right;display:inline-block;margin-bottom:0}}
+  </style>
+
+</head>
+<body>
+<header>
+  <div class="brand"><div class="mark" aria-hidden="true">R</div><div><strong>把需求说清楚</strong><small>RS_Agent · 卡片式购物入口</small></div></div>
+  <button class="top-action" id="view-toggle" aria-pressed="false">研究说明</button>
+</header>
+<main class="wrap">
+  <div class="intro"><h1>找到适合你的。</h1><p>从你本来想买的东西开始，几次选择，说清需求。</p></div>
+  <div class="layout participant" id="layout">
+    <div class="panel">
+      <ol class="progress" aria-label="需求确认进度"><li><span>1</span>想买什么</li><li><span>2</span>在哪用</li><li><span>3</span>不能接受</li><li><span>4</span>选哪种</li><li><span>5</span>确认</li><li><span>6</span>开始</li></ol>
+      <div class="body">
+        <section id="step-1" aria-labelledby="title-1">
+          <div class="step-label">01 / 原本的计划</div><h2 id="title-1" tabindex="-1">你本来想买什么？</h2><p class="lead">说个大概就行。</p>
+          <div class="field"><label for="need">我想买……</label><textarea id="need" maxlength="600" placeholder="先用自己的话说说……"></textarea></div>
+          <div class="field"><label for="reason">为什么想买？<span class="optional">可不填</span></label><textarea id="reason" maxlength="600" placeholder="说说遇到的问题或实际用途"></textarea></div>
+          <div class="cols"><div class="field"><label for="budget">原本的预算</label><input id="budget" type="text" maxlength="100" placeholder="没定可以留空"></div><div class="field"><label for="timing">打算什么时候买？</label><select id="timing"><option>尚未确定</option><option>这几天</option><option>一到两周内</option><option>一个月内</option><option>更晚一些</option><option>目前只是了解，不急着买</option></select></div></div>
+          <div class="field"><label for="purchase-stage">目前的进度</label><select id="purchase-stage"><option>尚未填写</option><option>还在寻找合适的商品</option><option>已经选定具体商品，只需要购买</option><option>尚未决定是否购买</option></select></div>
+          <div class="field"><label for="without-study">不参加研究，你也打算买吗？</label><select id="without-study"><option>还没想清楚</option><option>仍准备按原计划购买</option><option>会继续了解，是否购买还不确定</option><option>目前没有购买打算，主要想体验一下</option></select></div>
+          <div id="error-1" class="error" role="alert" hidden>先写下正在考虑的东西，或者选择“暂时没有需求”。</div>
+          <div class="actions"><button class="text-btn" id="no-need">我暂时没有需求</button><button class="primary" id="next-1">下一步 →</button></div>
+        </section>
+        <section id="step-2" aria-labelledby="title-2" hidden>
+          <div class="step-label">02 / 使用场景</div><h2 id="title-2" tabindex="-1">主要在哪用？</h2><p class="lead">选符合你的，可以多选。</p>
+          <div class="category-line"><span id="category-label"></span><button class="ghost" id="edit-category" aria-expanded="false" aria-controls="category-editor">换个类别</button></div>
+          <div id="category-editor" hidden><label for="category" class="sr-only">商品类别</label><select id="category"><option value="cup">水杯 / 保温杯</option><option value="headphones">耳机</option><option value="bag">背包</option><option value="other">其他</option></select></div>
+          <div class="scene-grid" id="scene-grid" aria-label="使用场景"></div>
+          <details class="optional-input" id="scene-extra"><summary>其他场景 / 补一句</summary><label for="scene-other" class="sr-only">其他场景</label><input id="scene-other" type="text" maxlength="500" placeholder="写下你的情况"></details>
+          <div class="actions"><button class="secondary" id="back-2">← 返回</button><button class="primary" id="next-2">下一步 →</button></div>
+          <div class="guidance-exit"><button class="ghost" id="skip-guidance">已经说清楚了，直接确认</button></div>
+        </section>
+        <section id="step-3" aria-labelledby="title-3" hidden>
+          <div class="step-label">03 / 购买底线</div><h2 id="title-3" tabindex="-1">哪些不能接受？</h2><p class="lead">只选一定要避开的。没有或不确定，可以不选。</p>
+          <div id="avoid-list" class="scene-grid" aria-label="不能接受的情况"></div>
+          <details class="optional-input" id="constraint-extra"><summary>还有其他要求</summary><label for="constraint-other" class="sr-only">其他要求</label><input id="constraint-other" type="text" maxlength="600" placeholder="比如必须有的功能"></details>
+          <div class="actions"><button class="secondary" id="back-3">← 返回</button><button class="primary" id="next-3">下一步 →</button></div>
+          <div class="guidance-exit"><button class="ghost" id="skip-comparison">不比较了，直接确认</button></div>
+        </section>
+        <section id="step-4" aria-labelledby="title-4" hidden>
+          <div class="step-label">04 / 只选一次</div><h2 id="title-4" tabindex="-1">你更倾向哪种？</h2>
+          <div id="generic-comparison" hidden><p class="lead">这一类还没有合适的比较卡，可以直接跳过。</p><details class="optional-input"><summary>我还有点纠结</summary><label for="generic-tradeoff" class="sr-only">还在纠结什么</label><input id="generic-tradeoff" type="text" maxlength="500" placeholder="可不填"></details></div>
+          <div id="comparison-panel">
+            <p class="lead" id="comparison-premise"></p>
+            <div class="choice-grid" id="choice-grid"></div>
+            <div class="other-choices" id="other-choices"><button class="secondary" data-choice="neither" aria-pressed="false">都不合适</button><button class="secondary" data-choice="either" aria-pressed="false">都可以</button><button class="secondary" data-choice="unknown" aria-pressed="false">暂时选不出</button></div>
+            <details class="optional-input" id="choice-followup" hidden><summary id="choice-reason-label">补一句原因（可选）</summary><label for="choice-reason" class="sr-only">选择原因</label><input id="choice-reason" type="text" maxlength="500" placeholder="可不填"></details>
+            <p class="sr-only" id="choice-status" role="status"></p>
+          </div>
+          <div class="actions"><button class="secondary" id="back-4">← 返回</button><button class="primary" id="next-4">看看我的需求 →</button></div>
+          <div class="guidance-exit"><button class="ghost" id="finish-comparison">跳过这题</button></div>
+        </section>
+        <section id="step-5" aria-labelledby="title-5" hidden>
+          <div class="step-label">05 / 确认需求</div><h2 id="title-5" tabindex="-1">是你想要的吗？</h2><p class="lead">不对的地方，点“修改”。</p>
+          <div id="summary-card"></div>
+          <details class="optional-input"><summary>再补充一句</summary><label for="final-note" class="sr-only">补充要求</label><input id="final-note" type="text" maxlength="600" placeholder="可不填"></details>
+          <label class="row-check"><input type="checkbox" id="confirm-card"><span>符合我现在的想法。</span></label>
+          <div id="error-5" class="error" role="alert" hidden>请先核对需求；不对的地方可以修改。</div>
+          <div class="actions"><button class="secondary" id="back-5">← 返回</button><button class="primary" id="confirm-next">确认 →</button></div>
+        </section>
+        <section id="step-6" aria-labelledby="title-6" hidden>
+          <div class="success-icon" aria-hidden="true">✓</div><div class="step-label">06 / 需求先确认，操作方式后安排</div><h2 id="title-6" tabindex="-1">按你的需求，进入购物。</h2><p class="lead" id="route-intro"></p>
+          <div class="notice" id="eligibility-note" hidden></div><div class="card" id="route-card"></div>
+          <div class="switcher" id="demo-switch" aria-label="演示操作方式"><button id="show-human">预览真人流程</button><button id="show-agent">预览 Agent 流程</button></div><p class="small" id="demo-switch-help">这里只展示流程，尚未连接真实 Agent、商品库或订单。</p>
+          <details><summary>查看确认后的需求记录</summary><pre id="frozen-card"></pre></details>
+          <div class="field"><label for="feedback">购物中又想到新的要求？<span class="optional">仅演示</span></label><textarea id="feedback" maxlength="600" placeholder="补充、纠正、要求重新比较，或者决定不买，都可以。"></textarea><button class="secondary" id="add-feedback" style="margin-top:10px">记录这次补充</button><p id="feedback-status" class="hint" role="status"></p><ul class="feedback-list" id="feedback-list"></ul></div>
+          <div class="notice">新的补充另存，不覆盖此前的需求。需求卡和对话不直接输入只看商城痕迹的 RS_Agent 模型。</div>
+          <div class="actions"><button class="text-btn" id="restart">清空本次演示，重新开始</button></div>
+        </section>
+        <section id="no-need-state" aria-labelledby="title-none" hidden><div class="quiet-state"><div class="success-icon" aria-hidden="true">↗</div><h2 id="title-none" tabindex="-1">等真的需要时再来。</h2><p>不需要为了参加研究临时找一件东西来买，也不用为了完成卡片而作出选择。</p><button class="secondary" id="return-start">返回需求入口</button></div></section>
+      </div>
+    </div>
+    <aside class="research" id="research-notes" aria-label="教授讨论说明" hidden>
+      <div class="note"><div class="note-kicker">这一屏为什么这样设计</div><span class="chip">需求澄清，不是测谎或促销</span><h3 id="note-title"></h3><p id="note-text"></p><ol id="note-list"></ol><p class="plain">表达得更具体 ≠ 原本就想买。还需结合原有计划、真实价格下的决定，以及实际购买和未购买原因。</p></div>
+      <div class="note"><div class="note-kicker">和现有方法有什么关系</div><details><summary>查看参考方法与使用边界</summary><ol class="source-list">
+        <li><a href="https://help.octaneai.com/en/articles/4346619-getting-started-with-quizzes" target="_blank" rel="noopener noreferrer">Octane AI：电商选购问答</a><br>借鉴按用途和回答继续提问的产品问答形式。此处不以提高转化率为目标。</li>
+        <li><a href="https://sawtoothsoftware.com/help/lighthouse-studio/manual/sections-and-flow-for-adaptive-cbc.html" target="_blank" rel="noopener noreferrer">Sawtooth：自适应联合分析 ACBC</a><br>借鉴先了解要求、再筛选和比较的过程。本页一组示意卡不是完整 ACBC，不能据此估计效用或支付意愿。</li>
+        <li><a href="https://sawtoothsoftware.com/help/lighthouse-studio/manual/how-acbc-concepts-are-chosen.html" target="_blank" rel="noopener noreferrer">ACBC：底线需要用户确认</a><br>正式 ACBC 可从多次选择中形成底线假设，再请用户确认。本原型更简单，直接让用户声明并确认，未实现该推断算法。</li>
+        <li><a href="https://www.qualtrics.com/support/conjoint-project/getting-started-conjoints/getting-started-maxdiff/maxdiff-analysis-white-paper/" target="_blank" rel="noopener noreferrer">Qualtrics：MaxDiff 最佳—最差选择</a><br>可用来问相对重视程度；“相对最不重要”不是“绝对不能接受”。本页没有实施完整 MaxDiff 设计。</li>
+        <li><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0292096" target="_blank" rel="noopener noreferrer">Aubert 等，2023：问卷游戏化实验</a><br>该研究中，游戏化没有保证更好的完成表现。本页仅用卡片和进度，不设置答题得分或购买奖励。</li>
+      </ol></details><details><summary>正式实验前先怎么验证</summary><p>先把参与者随机分到“自由描述”或“卡片引导”，保留两组引导前的原话。由不知道分组的评估者检查需求是否更明确、是否出现没有用户依据的新条件；再结合未展示过的商品选择与真实后续购物，查看需求卡有没有帮助。</p><p>还要记录耗时、退出、修改和“都不合适”。更高转化率或更少反悔，不能单独证明需求更真实。同一参与者不先后体验两个入口再当作独立比较。</p><p>真人／Agent 比较使用同样的入口规则，并在入口完成后分配操作方式。这里的随机流程仅演示，不代替正式随机分配方案。</p></details></div>
+      <div class="note"><div class="note-kicker">可回溯的数据边界</div><div class="data-grid"><div class="data-row"><strong>研究侧</strong>引导前原话、展示过的卡片与顺序、回答及修改、确认后的需求卡、实验分配。</div><div class="data-row"><strong>Agent 侧</strong>被委托时接收用户确认的需求和后续反馈；跳过的内容不是偏好。</div><div class="data-row"><strong>RS_Agent 平台模型</strong>只看商城搜索、曝光、浏览、点击等痕迹。不读取这些答案、对话或实验分配标签作为预测特征。</div></div><details><summary>查看本次演示记录</summary><pre id="data-preview"></pre><button class="secondary" id="download-record">下载本次演示记录</button><p class="hint">只下载到你自己的设备，不上传服务器。</p></details></div>
+    </aside>
+  </div>
+  <p class="footer">演示版 · 未连接商城，填写内容不上传，刷新后清空。</p>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const NOW = () => new Date().toISOString();
+const copy = value => JSON.parse(JSON.stringify(value));
+const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// 固定模板；类别建议只匹配明确关键词，不让模型猜测隐藏偏好。
+const templates = {
+  cup: {
+    label: '水杯 / 保温杯', keywords: /水杯|保温杯|杯子|随行杯|保温壶|水壶|水瓶/,
+    scenes: [
+      ['commute','🚇','通勤','放包里，在路上或到办公室喝'],
+      ['desk','☕','办公 / 学习','工作、学习时随手喝'],
+      ['exercise','🚶','运动 / 外出','走路、运动或较长时间在外面'],
+      ['home','⌂','在家','在家喝水、茶或其他饮品']
+    ],
+    avoids: [
+      ['leak','漏水','例如倒放或晃动时漏出来'],
+      ['clean','难清洗','例如盖子、吸管和密封圈'],
+      ['fragile','不耐摔','例如不耐摔或特别怕碰'],
+      ['drink','不能装常喝的饮品','需要根据材质、说明另行核实']
+    ],
+    questions: [
+      {id:'cup-carry',scenes:['commute','exercise'],title:'带着走时，你更愿意接受哪种取舍？',options:[
+        {id:'light',name:'小一点，更轻',attrs:[['容量','350 ml'],['空杯重量','约 200 g']]},
+        {id:'large',name:'大一点，更重',attrs:[['容量','600 ml'],['空杯重量','约 350 g']]}
+      ]},
+      {id:'cup-temperature',scenes:['desk','home'],title:'喝热饮时，你更在意哪一种？',options:[
+        {id:'warm',name:'早点能喝',attrs:[['优点','降温快'],['取舍','保温时间短']]},
+        {id:'hot',name:'保温更久',attrs:[['优点','保温时间长'],['取舍','喝之前要等凉']]}
+      ]}
+    ]
+  },
+  headphones: {
+    label: '耳机', keywords: /耳机|headphone|earbud|airpods/i,
+    scenes: [
+      ['commute','🚇','通勤','坐车或步行时使用'],['work','▤','工作 / 学习','长时间佩戴，可能需要通话'],['exercise','🚶','运动','跑步、健身或户外活动'],['home','♫','在家听歌 / 看视频','主要在比较安静的环境里']
+    ],
+    avoids: [
+      ['comfort','戴着不舒服','需要实际试戴或可靠的佩戴信息'],['fall','容易掉落','跑动或走路时戴不稳'],['compat','设备不兼容','连接、切换或功能受到限制'],['call','通话不清楚','麦克风效果不满足实际用途']
+    ],
+    questions: [
+      {id:'headphone-awareness',scenes:['commute','exercise'],title:'你想隔开环境，还是保留对周围的感知？',options:[
+        {id:'isolate',name:'更安静',attrs:[['优点','环境干扰少'],['取舍','容易错过提示音']]},
+        {id:'aware',name:'听得见周围',attrs:[['优点','方便留意周围'],['取舍','环境噪声更多']]}
+      ]},
+      {id:'headphone-battery',scenes:['work','home'],title:'同样佩戴方式下，重量和续航怎么取舍？',options:[
+        {id:'light',name:'更轻',attrs:[['优点','重量轻'],['取舍','充电更频繁']]},
+        {id:'battery',name:'续航更长',attrs:[['优点','不用经常充电'],['取舍','重量更大']]}
+      ]}
+    ]
+  },
+  bag: {
+    label: '背包', keywords: /背包|双肩包|书包/,
+    scenes: [
+      ['commute','🚇','通勤 / 上学','经常装电脑、书或日常用品'],['travel','▧','短途旅行','一次带上几天要用的物品'],['exercise','🚶','运动 / 户外','带衣物、饮水或运动用品'],['daily','⌂','日常外出','以随身的小件物品为主']
+    ],
+    avoids: [
+      ['laptop','装不下必需品','需要核实电脑、书本或其他物品尺寸'],['strap','肩带勒人','长时间负重时容易勒肩'],['rain','下雨容易进水','防泼水和防水需要区分核实'],['zip','开合不方便','担心取用麻烦或可靠性不足']
+    ],
+    questions: [
+      {id:'bag-capacity',scenes:['travel','exercise'],title:'够装和轻便之间，你倾向哪边？',options:[
+        {id:'small',name:'轻便小包',attrs:[['优点','轻、占地小'],['取舍','装得少']]},
+        {id:'large',name:'大容量背包',attrs:[['优点','装得多'],['取舍','更重、更占空间']]}
+      ]},
+      {id:'bag-organization',scenes:['commute','daily'],title:'你平时更习惯哪种整理方式？',options:[
+        {id:'pockets',name:'分隔多',attrs:[['优点','小物品好找'],['取舍','大件不容易放']]},
+        {id:'open',name:'大开间',attrs:[['优点','放东西灵活'],['取舍','小物品容易混在一起']]}
+      ]}
+    ]
+  },
+  other: {label:'其他类别',keywords:null,scenes:[['daily','⌂','日常使用','想改善平时遇到的问题'],['event','◷','特定活动','因为一件已计划的事情需要购买'],['replace','↺','替换 / 补充','旧的不好用、用完了，或需要补充'],['gift','◇','给别人用','需要考虑实际使用者的需要']],avoids:[['setup','上手太麻烦','需要花很多时间才能开始使用'],['maintenance','后续维护麻烦','清理、保养、补充耗材等'],['size','太占空间','存放、携带或实际摆放受限']],questions:[]}
+};
+const strengthLabels = {unknown:'还没想过 / 不确定',okay:'可以接受',soft:'不太想要，但可以商量',hard:'绝对不能接受'};
+const otherChoiceLabels = {neither:'两个都不合适',either:'都可以，没明显偏好',unknown:'信息不够，暂时选不出',skip:'这题与我无关 / 跳过'};
+const originalLabels = {want:'原本想买什么',reason:'为什么现在想买',budget:'原来的预算',timing:'原定时间',stage:'目前阶段',withoutStudy:'没有研究时的打算'};
+const notes = {
+  1:{title:'先记录引导前的原话',text:'预算和购买打算也先记录，避免先看示例价格再反推自己的计划。',items:['不提前安排真人或 Agent 条件。','第一次离开本页时保留不可覆盖的原始快照。','后续修改另记；“会买”的自报并非真实性标签。']},
+  2:{title:'从商品类别走到实际场景',text:'按明确关键词建议类别，由用户核对；场景卡帮助回忆实际用途。',items:['水杯、耳机、背包有专用模板，其他类别走通用入口。','可以多选、补写或全部跳过；不默认选中任何场景。','模板是研究者提供的提示，其答案不能冒充自发原话。']},
+  3:{title:'把偏好与底线分开',text:'本页只问明确不能接受的条件；一般偏好留给后面的取舍。',items:['未点选保留为未知，不代表能接受。','点击“不能接受”即是明确声明；最后再统一确认需求卡。','直接询问底线，不从拒绝某个商品推断其所有属性。']},
+  4:{title:'用有代价的选择澄清需求',text:'先展示与已选场景相关的一组；比较卡片的左右位置随机并记录。',items:['只呈现一组，不设分数、排名或正确答案。','本版价格相同，只探索属性取舍，不能估计支付意愿。','实际选择与理由原样保留，不把一次回答当作稳定效用参数。']},
+  5:{title:'保留各条信息的来路',text:'用户原话、提示后回答、条件式取舍分别展示，再让用户确认。',items:['未作答、不确定和否定是不同状态。','允许撤回或修改，保留修改记录。','引导可能改变偏好表达；需求卡不是用户真实偏好的完美标签。']},
+  6:{title:'购物方式与需求内容分开',text:'确认后再演示真人或 Agent 操作，保持同样的需求入口。',items:['用户能补充、改选、接管或决定不买。','浏览执行者、推荐者、最终决定者分别记录。','平台模型只能使用商城侧观测，不能偷看入口答案。']},
+  none:{title:'保留没有需求的正常出口',text:'不为凑足实验任务数制造购买。',items:['不把退出当成异常或低质量。','未来可以在真正需要时回来。','参加报酬与是否购买脱钩。']}
+};
+let step=1, researchView=false, original=null, baseline=null, route=null;
+let category='other', categoryGuess='other', categoryConfirmed=false;
+let sceneIds=new Set(), avoidAnswers={}, pairQueue=[], pairIndex=0, pairSignature='';
+let events=[], comparisons=[], feedbacks=[];
+
+function record(type, payload={}) {
+  events.push({index:events.length+1,time:NOW(),type,...copy(payload)});
+}
+function rawDraft() {
+  return {want:$('need').value.trim(),reason:$('reason').value.trim(),budget:$('budget').value.trim(),timing:$('timing').value,stage:$('purchase-stage').value,withoutStudy:$('without-study').value};
+}
+function guessCategory(text) {
+  const matches=Object.entries(templates).filter(([key,value])=>key!=='other' && value.keywords.test(text));
+  return matches.length===1 ? matches[0][0] : 'other';
+}
+function shuffled(values) {
+  const result=[...values];
+  for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}
+  return result;
+}
+function sceneNames(){return templates[category].scenes.filter(s=>sceneIds.has(s[0])).map(s=>s[2]);}
+function constraintDraft(){return templates[category].avoids.map(([id,label])=>({id,label,answer:avoidAnswers[id]||'unknown',hardConfirmed:avoidAnswers[id]==='hard',confirmationSource:avoidAnswers[id]==='hard'?'direct_cannot_accept_selection':null}));}
+function makeDraft(){return {initialUnprompted:original,currentWords:rawDraft(),category:{id:category,label:templates[category].label,confirmed:categoryConfirmed},guided:{scenes:sceneNames(),sceneIds:[...sceneIds],otherScene:$('scene-other').value.trim(),constraints:constraintDraft(),otherRequirements:$('constraint-other').value.trim(),comparisons:copy(comparisons),otherTradeoff:$('generic-tradeoff').value.trim()},finalNote:$('final-note').value.trim()};}
+function dataSnapshot(){return {prototypeVersion:'guided-simple-2026-11-08',notice:'研究讨论原型；以下仅在本页内存中。卡片选择不是商城操作记录。',researchOnly:{initialUnprompted:original,currentDraft:makeDraft(),confirmedNeed:baseline,demonstrationRoute:route,events,feedbacks},RS_Agent_Input:{storefrontEvents:[],note:'尚未进入商城。入口答案、对话、实验条件不可作为平台来源预测特征。'}};}
+function updateData(){$('data-preview').textContent=JSON.stringify(dataSnapshot(),null,2);}
+function setStep(next){
+  step=next;
+  for(let n=1;n<=6;n++)$('step-'+n).hidden=n!==next;
+  $('no-need-state').hidden=next!=='none';
+  document.querySelectorAll('.progress li').forEach((li,i)=>{li.classList.toggle('current',i+1===next);li.classList.toggle('done',Number.isInteger(next)&&i+1<next);if(i+1===next)li.setAttribute('aria-current','step');else li.removeAttribute('aria-current');});
+  const note=notes[next];$('note-title').textContent=note.title;$('note-text').textContent=note.text;
+  $('note-list').replaceChildren(...note.items.map(text=>{const li=document.createElement('li');li.textContent=text;return li;}));
+  record('screen_view',{screen:next});updateData();
+  $('title-'+(next==='none'?'none':next)).focus({preventScroll:true});
+  window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+}
+function sceneOptionsShown(){return templates[category].scenes.map(([id,icon,label])=>({id,icon,label}));}
+function renderScenes(){
+  $('category').value=category;$('category-label').textContent=templates[category].label;
+  $('scene-grid').replaceChildren(...sceneOptionsShown().map(({id,icon,label})=>{
+    const button=document.createElement('button');button.className='scene-card';button.type='button';button.setAttribute('aria-pressed',String(sceneIds.has(id)));
+    button.innerHTML='<span class="icon" aria-hidden="true">'+icon+'</span><strong>'+esc(label)+'</strong><span class="tick" aria-hidden="true">'+(sceneIds.has(id)?'✓':'')+'</span>';
+    button.addEventListener('click',()=>{sceneIds.has(id)?sceneIds.delete(id):sceneIds.add(id);record('scene_response',{category,id,selected:sceneIds.has(id)});renderScenes();updateData();});return button;
+  }));
+}
+function avoidOptionsShown(){return templates[category].avoids.map(([id,label])=>({id,label}));}
+function renderAvoids(){
+  $('avoid-list').replaceChildren(...avoidOptionsShown().map(({id,label})=>{
+    const selected=avoidAnswers[id]==='hard';
+    const button=document.createElement('button');button.className='scene-card avoid-card';button.type='button';button.setAttribute('aria-pressed',String(selected));
+    button.innerHTML='<span class="avoid-mark" aria-hidden="true">'+(selected?'×':'+')+'</span><strong>'+esc(label)+'</strong>';
+    button.addEventListener('click',()=>{avoidAnswers[id]=selected?'unknown':'hard';record('avoid_response',{category,id,label,answer:avoidAnswers[id],confirmationSource:'direct_cannot_accept_selection'});renderAvoids();updateData();});return button;
+  }));
+}
+// 一轮比较：优先选择匹配使用场景的题；左右顺序随机并保留记录。
+function preparePairs(){
+  const signature=JSON.stringify({category,scenes:[...sceneIds].sort(),otherScene:$('scene-other').value.trim(),constraints:constraintDraft(),extra:$('constraint-other').value.trim(),currentWords:rawDraft()});
+  if(signature!==pairSignature){
+    if(comparisons.length)record('comparisons_invalidated',{reason:'比较的上下文已改变',previous:comparisons});
+    comparisons=[];pairIndex=0;
+    pairQueue=[...templates[category].questions].sort((a,b)=>Number(b.scenes.some(s=>sceneIds.has(s)))-Number(a.scenes.some(s=>sceneIds.has(s)))).slice(0,1).map(q=>({...copy(q),options:shuffled(q.options),exposed:false}));
+    pairSignature=signature;
+  }
+}
+function currentResponse(){const q=pairQueue[pairIndex];return q?comparisons.find(c=>c.questionId===q.id):undefined;}
+function premiseText(){return '假设价格相同、预算够，也满足你刚才的底线。';}
+function savePairChoice(choice,via='explicit_selection'){
+  const q=pairQueue[pairIndex];if(!q)return;
+  const prior=currentResponse();
+  const answer={questionId:q.id,title:q.title,premise:premiseText(),optionOrder:q.options.map(o=>o.id),options:copy(q.options),choice,via,choiceLabel:otherChoiceLabels[choice]||q.options.find(o=>o.id===choice).name,reason:prior&&prior.choice===choice?prior.reason:'',time:NOW()};
+  comparisons=comparisons.filter(c=>c.questionId!==q.id);comparisons.push(answer);
+  record('comparison_response',answer);renderPair();updateData();
+}
+function renderPair(){
+  $('generic-comparison').hidden=pairQueue.length>0;$('comparison-panel').hidden=pairQueue.length===0;
+  if(!pairQueue.length){$('next-4').textContent='看看我的需求 →';return;}
+  const q=pairQueue[pairIndex];const answer=currentResponse();
+  $('comparison-premise').textContent='示意方案 · '+premiseText();
+  $('choice-grid').replaceChildren(...q.options.map((option,index)=>{
+    const selected=answer?.choice===option.id;const card=document.createElement('div');card.className='pair-card'+(selected?' selected':'');
+    card.innerHTML='<div class="option-label">方案 '+String.fromCharCode(65+index)+'</div><h3>'+esc(option.name)+'</h3><dl>'+option.attrs.map(([label,value])=>'<dt>'+esc(label)+'</dt><dd>'+esc(value)+'</dd>').join('')+'</dl>';
+    const button=document.createElement('button');button.className='secondary';button.textContent=selected?'✓ 已选':'选这个';button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',(selected?'已选：':'选择：')+option.name);button.addEventListener('click',()=>savePairChoice(option.id));card.append(button);return card;
+  }));
+  document.querySelectorAll('[data-choice]').forEach(b=>b.setAttribute('aria-pressed',String(answer?.choice===b.dataset.choice)));
+  $('choice-followup').hidden=!answer||answer.choice==='skip';
+  const prompts={neither:'哪里不合适？（可选）',either:'补一句（可选）',unknown:'还想知道什么？（可选）'};
+  $('choice-reason-label').textContent=prompts[answer?.choice]||'补一句原因（可选）';
+  $('choice-reason').value=answer?.reason||'';
+  $('choice-status').textContent=answer?'已记录：'+answer.choiceLabel+'。':'';
+  $('next-4').textContent='看看我的需求 →';
+  if(!q.exposed){record('comparison_shown',{category,questionId:q.id,premise:premiseText(),options:copy(q.options)});q.exposed=true;}
+}
+function persistReason(){
+  const answer=currentResponse();if(!answer)return;
+  const text=$('choice-reason').value.trim();
+  if(text!==answer.reason){answer.reason=text;record('comparison_reason',{questionId:answer.questionId,choice:answer.choice,text});}
+}
+function toSummary(){
+  if(step===4)persistReason();
+  $('confirm-card').checked=false;$('error-5').hidden=true;renderSummary();setStep(5);
+}
+function section(title,content,edit){return '<div class="summary-section"><button class="edit-link" data-edit="'+edit+'">修改</button><h3>'+title+'</h3>'+content+'</div>';}
+function textRows(data){return Object.entries(originalLabels).map(([key,label])=>'<p><strong>'+label+'：</strong>'+esc(data[key]||'未提供 / 未确定')+'</p>').join('');}
+function renderSummary(){
+  const d=makeDraft(),g=d.guided,w=d.currentWords;
+  const budget=w.budget||'预算未定';
+  let content=section('想买', '<p class="summary-need">'+esc(w.want)+'</p><p class="small">'+esc(budget)+' · '+esc(w.timing||'时间未定')+'</p>'+(w.reason?'<p>'+esc(w.reason)+'</p>':''),1);
+  content+=section('主要用途','<p>'+esc([...g.scenes,g.otherScene].filter(Boolean).join('、')||'还没确定')+'</p>',2);
+  const hard=g.constraints.filter(c=>c.answer==='hard').map(c=>c.label);
+  content+=section('不能接受','<p>'+esc(hard.join('、')||'尚未明确')+'</p>'+(g.otherRequirements?'<p>其他要求：'+esc(g.otherRequirements)+'</p>':''),3);
+  const compared=g.comparisons.filter(c=>c.choice!=='skip');
+  content+=section('这组取舍里',compared.length?compared.map(c=>'<p>'+esc(c.choiceLabel)+(c.reason?'；'+esc(c.reason):'')+'</p>').join(''):'<p>还没确定</p>',4);
+  if(g.otherTradeoff)content+='<p class="small">还在纠结：'+esc(g.otherTradeoff)+'</p>';
+  $('summary-card').innerHTML=content;
+  $('summary-card').querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>goEdit(Number(b.dataset.edit))));
+}
+function goEdit(target){
+  record('edit_requested',{target});
+  if(target===2)renderScenes();if(target===3)renderAvoids();if(target===4){preparePairs();pairIndex=0;renderPair();}setStep(target);
+}
+function eligible(d){return d.currentWords.withoutStudy==='仍准备按原计划购买' && ['还在寻找合适的商品','已经选定具体商品，只需要购买'].includes(d.currentWords.stage);}
+function renderRoute(){
+  if(!baseline)return;
+  const okay=eligible(baseline),alreadySelected=baseline.currentWords.stage==='已经选定具体商品，只需要购买';
+  $('demo-switch').hidden=!researchView||!okay;$('eligibility-note').hidden=okay;
+  $('eligibility-note').textContent='你可以继续了解，不需要承诺购买。这一版演示先停在需求澄清，不把自报答案作为真实招募资格判定。';
+  if(!okay){$('route-intro').textContent='保留现在的想法，等计划明确时再开始。';$('route-card').innerHTML='<h3>先不安排购物方式</h3><p class="small">正式实验需要了解原有需求和实际可购买的商品，不能仅凭表单判断真实性。</p>';}
+  else{
+    const agent=route==='A';$('route-intro').textContent=(agent?'下面预览 Agent 协助购物。':'下面预览真人直接购物。')+(alreadySelected?'你已选定商品，本轮属于执行购买，不强制重新比较。':'你仍然可以改选、继续了解或决定不买。');
+    const stages=agent?[
+      [alreadySelected?'核对选定商品':'Agent 根据确认的需求查找',alreadySelected?'核对型号、规格、实际价格和库存。':'接收已确认的要求及未确定项，自主选择搜索、查看、比较或核实。'],
+      ['用户可以反馈、改选或接管','Agent 提问或给出候选时，用户可以纠正，也可以要求继续找。'],
+      ['形成实际购物结果','分别记录推荐、用户接受或改选，以及授权后的实际购买；不要求一定下单。']
+    ]:[['按平时的方式购物',alreadySelected?'核对已经选定的商品，决定是否继续购买。':'在同一商城自行搜索、浏览、比较。'],['需要改变想法时照常改变','允许返回、调整要求、选择其他商品或不买。'],['记录实际结果','保留最终选择、购买、取消及未购买的区别。']];
+    $('route-card').innerHTML='<div class="route-title"><h3>'+(agent?'Agent 协助购物':'真人直接购物')+'</h3><span class="tag">仅流程预览</span></div><ol class="flow">'+stages.map(([a,b])=>'<li><strong>'+a+'</strong><p>'+b+'</p></li>').join('')+'</ol>';
+    $('show-human').classList.toggle('active',!agent);$('show-agent').classList.toggle('active',agent);
+  }
+  $('frozen-card').textContent=JSON.stringify(baseline,null,2);updateData();
+}
+function clearGuided(reason){
+  record('guided_reset',{reason,previous:makeDraft().guided});
+  sceneIds=new Set();avoidAnswers={};comparisons=[];pairQueue=[];pairSignature='';pairIndex=0;document.querySelectorAll('.optional-input').forEach(d=>d.open=false);
+  ['scene-other','constraint-other','generic-tradeoff','final-note'].forEach(id=>$(id).value='');$('confirm-card').checked=false;
+}
+
+$('next-1').addEventListener('click',()=>{
+  const d=rawDraft();if(!d.want){$('error-1').hidden=false;$('need').focus();return;}$('error-1').hidden=true;
+  if(!original){original=Object.freeze({...copy(d),capturedAt:NOW()});categoryGuess=guessCategory(d.want);category=categoryGuess;record('initial_unprompted_captured',{data:original});}
+  else{record('original_fields_revised',{data:d});const newGuess=guessCategory(d.want);if(newGuess!==categoryGuess){clearGuided('商品描述对应的类别建议改变');categoryGuess=newGuess;category=newGuess;categoryConfirmed=false;}}
+  renderScenes();record('scenes_shown',{category,options:sceneOptionsShown()});setStep(2);
+});
+$('edit-category').addEventListener('click',()=>{const show=$('category-editor').hidden;$('category-editor').hidden=!show;$('edit-category').setAttribute('aria-expanded',String(show));});
+$('category').addEventListener('change',()=>{const next=$('category').value;clearGuided('用户更改商品类别');category=next;categoryConfirmed=true;$('category-editor').hidden=true;$('edit-category').setAttribute('aria-expanded','false');record('category_changed',{category});renderScenes();record('scenes_shown',{category,options:sceneOptionsShown()});updateData();});
+$('next-2').addEventListener('click',()=>{categoryConfirmed=true;record('scene_page_submitted',{category,selected:[...sceneIds],other:$('scene-other').value.trim()});renderAvoids();record('avoid_options_shown',{category,options:avoidOptionsShown()});setStep(3);});
+$('next-3').addEventListener('click',()=>{record('constraints_submitted',{constraints:constraintDraft(),other:$('constraint-other').value.trim()});preparePairs();pairIndex=0;renderPair();setStep(4);});
+$('skip-guidance').addEventListener('click',()=>{categoryConfirmed=true;record('guidance_skipped',{from:step});preparePairs();toSummary();});
+$('skip-comparison').addEventListener('click',()=>{record('comparison_skipped',{from:step});preparePairs();toSummary();});
+$('back-2').addEventListener('click',()=>setStep(1));$('back-3').addEventListener('click',()=>{renderScenes();setStep(2);});
+$('back-4').addEventListener('click',()=>{persistReason();if(pairIndex>0){pairIndex--;renderPair();updateData();}else{renderAvoids();setStep(3);}});
+$('back-5').addEventListener('click',()=>{preparePairs();renderPair();setStep(4);});
+$('next-4').addEventListener('click',()=>{persistReason();if(pairQueue.length&&!currentResponse())savePairChoice('skip','continued_without_answer');if(pairIndex<pairQueue.length-1){pairIndex++;renderPair();updateData();$('title-4').focus({preventScroll:true});}else toSummary();});
+$('finish-comparison').addEventListener('click',()=>{if(pairQueue.length)savePairChoice('skip','explicit_skip');record('comparison_skipped',{from:4});toSummary();});
+$('choice-reason').addEventListener('change',()=>{persistReason();updateData();});
+$('other-choices').querySelectorAll('[data-choice]').forEach(b=>b.addEventListener('click',()=>savePairChoice(b.dataset.choice)));
+$('confirm-next').addEventListener('click',()=>{if(!$('confirm-card').checked){$('error-5').hidden=false;$('confirm-card').focus();return;}$('error-5').hidden=true;baseline=Object.freeze({...copy(makeDraft()),confirmedAt:NOW()});route=eligible(baseline)?(Math.random()<.5?'H':'A'):null;record('need_confirmed',{data:baseline});record('demo_route_assigned',{route,notFormalRandomization:true});renderRoute();setStep(6);});
+$('show-human').addEventListener('click',()=>{route='H';record('demo_route_preview',{route});renderRoute();});$('show-agent').addEventListener('click',()=>{route='A';record('demo_route_preview',{route});renderRoute();});
+$('add-feedback').addEventListener('click',()=>{const text=$('feedback').value.trim();if(!text){$('feedback-status').textContent='可以不补充；需要记录时先写下内容。';return;}const item={text,time:NOW()};feedbacks.push(item);record('later_feedback',item);const li=document.createElement('li');li.textContent=text;$('feedback-list').append(li);$('feedback').value='';$('feedback-status').textContent='已另行记录，未覆盖确认时的需求。';updateData();});
+$('view-toggle').addEventListener('click',()=>{researchView=!researchView;$('research-notes').hidden=!researchView;$('layout').classList.toggle('participant',!researchView);$('view-toggle').textContent=(researchView?'收起说明':'研究说明');$('view-toggle').setAttribute('aria-pressed',String(researchView));if(step===6)renderRoute();});
+$('no-need').addEventListener('click',()=>{record('no_current_need');setStep('none');});$('return-start').addEventListener('click',()=>setStep(1));
+// 下载由用户点击触发；无服务器、埋点 SDK 或浏览器持久存储。
+$('download-record').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(dataSnapshot(),null,2)],{type:'application/json;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='shopping-need-demo-record.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+$('restart').addEventListener('click',()=>{
+  ['need','reason','budget','scene-other','constraint-other','generic-tradeoff','choice-reason','final-note','feedback'].forEach(id=>$(id).value='');
+  ['timing','purchase-stage','without-study'].forEach(id=>$(id).selectedIndex=0);
+  $('confirm-card').checked=false;$('error-1').hidden=true;$('error-5').hidden=true;$('feedback-list').replaceChildren();$('feedback-status').textContent='';
+  document.querySelectorAll('.optional-input').forEach(d=>d.open=false);$('category-editor').hidden=true;$('edit-category').setAttribute('aria-expanded','false');
+  original=null;baseline=null;route=null;category='other';categoryGuess='other';categoryConfirmed=false;sceneIds=new Set();avoidAnswers={};pairQueue=[];pairIndex=0;pairSignature='';events=[];comparisons=[];feedbacks=[];setStep(1);
+});
+['scene-other','constraint-other','generic-tradeoff','final-note'].forEach(id=>$(id).addEventListener('change',()=>{record('free_text_change',{field:id,value:$(id).value.trim()});updateData();}));
+setStep(1);
+</script>
+</body>
+</html>

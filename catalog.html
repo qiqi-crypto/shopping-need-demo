@@ -2,7 +2,7 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>生活选物｜母婴·宠物·家居·运动</title><link rel="stylesheet" href="catalog.css?v=20261109"></head>
 <body>
-<div class="utility-bar"><div><span>生活选物 · 商品体验</span><nav><a href="index.html">我的购买需求</a><a href="model-inputs.html">商品与价格说明</a><button id="open-records" class="quiet">浏览记录</button></nav></div></div>
+<div class="utility-bar"><div><span>生活选物 · 商品体验</span><nav><a href="index.html">我的购买需求</a><a href="model-inputs.html">商品与价格说明</a><a href="agent.html" class="agent-entry">让 Agent 帮我挑</a><button id="open-records" class="quiet">浏览记录</button></nav></div></div>
 <header class="store-header"><a class="brand" href="catalog.html"><span class="mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 10h18l2 17H5L7 10Z" stroke="currentColor" stroke-width="2.2"/><path d="M11 12V8a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span><span>生活选物<small>为生活，选合适的</small></span></a>
 <div class="search-area"><form id="search-form" role="search"><label class="search"><span class="sr-only">搜索商品</span><input id="query" type="search" placeholder="搜索当前场景的商品、品牌、规格" autocomplete="off"><button type="submit">搜索</button></label></form><div class="search-hint">按场景找商品 <span>·</span> 看规格 <span>·</span> 比价格 <span>·</span> 选适合自己的</div></div><a href="index.html" class="need-entry"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h14v17H5zM9 2h6v4H9zM8 11h8M8 15h5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>我的需求清单<small>整理这次想买什么</small></span></a></header>
 <div class="category-nav"><div class="category-nav-inner"><span class="category-label">☰ 商品分类</span><nav id="scene-tabs" class="scene-tabs" aria-label="生活场景"></nav><span class="catalog-total">1,226 件商品，慢慢挑</span></div></div>
@@ -16,12 +16,12 @@
 <div id="product-grid" class="product-grid"></div><div id="pagination" class="pagination"></div><div id="empty" hidden class="empty">暂时没有匹配商品。试试更短的关键词，或换一个品类。</div>
 </div></section>
 <section id="outcome" class="outcome" hidden aria-live="polite"></section>
-<footer><p id="exchange-note" class="exchange-note"></p><p>商品来源：Amazon Reviews 2023。商品体验版，保留原始美元标价；不代表当前在售价。</p><p>本版记录仅存当前浏览器，可导出。未连接真实 Agent 或支付服务。</p></footer>
+<footer><p id="exchange-note" class="exchange-note"></p><p>商品来源：Amazon Reviews 2023。商品体验版，保留原始美元标价；不代表当前在售价。</p><p>自己浏览的记录保存在本机；使用 Agent 体验时，对话与操作记录会保存到实验服务器。本商城不提供支付。</p></footer>
 </main>
 <div class="bottom-bar"><span id="compare-count">选几件，放在一起看看</span><div><button id="compare-open" disabled>比较商品（0）</button><button id="no-selection" class="quiet">这次先不选</button><button id="new-session" class="quiet">开始下一次浏览</button></div></div>
 <dialog id="detail-dialog"><div class="dialog-top"><span>商品详情</span><button data-close="detail-dialog" aria-label="返回商品列表">← 返回</button></div><div id="detail-body"></div></dialog>
 <dialog id="compare-dialog"><div class="dialog-top"><span>并排比较</span><button data-close="compare-dialog">关闭</button></div><div id="compare-body"></div></dialog>
 <dialog id="choice-dialog"><div class="dialog-top"><span>确认这次选择</span><button data-close="choice-dialog">返回</button></div><div class="choice-body"><h2 id="choice-title"></h2><p>这里只记录你的选择，不会下单。显示的是历史标价，当前售价和库存未核实；此次选择不是购买承诺。</p><button id="confirm-choice" class="primary">记录这个选择</button></div></dialog>
-<dialog id="records-dialog"><div class="dialog-top"><span>本机研究记录</span><button data-close="records-dialog">关闭</button></div><div class="record-body"><p id="record-summary"></p><p>导出中把商城行为与问卷内容分开。浏览顺序、可选集合和最终选择可以查看；目前没有真实订单、已核实来源标签或 Agent 操作。</p><button id="export-records" class="primary">导出 JSON 记录</button><button id="erase-records" class="quiet">清除本机购物记录</button><details><summary>查看当前会话的平台记录</summary><pre id="record-json"></pre></details></div></dialog>
+<dialog id="records-dialog"><div class="dialog-top"><span>本机研究记录</span><button data-close="records-dialog">关闭</button></div><div class="record-body"><p id="record-summary"></p><p>导出中把商城行为与问卷内容分开。浏览顺序、可选集合和最终选择可以查看；本机记录不包含 Agent 服务器会话。Agent 对话页可以单独导出服务器记录；两者都不代表真实订单。</p><button id="export-records" class="primary">导出 JSON 记录</button><button id="erase-records" class="quiet">清除本机购物记录</button><details><summary>查看当前会话的平台记录</summary><pre id="record-json"></pre></details></div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="data/catalog.js"></script><script src="catalog.js?v=20261109"></script></body></html>
+<script src="agent-telemetry.js"></script><script src="data/catalog.js"></script><script src="catalog.js?v=20261109"></script></body></html>

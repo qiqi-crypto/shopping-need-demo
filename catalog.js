@@ -35,7 +35,7 @@ function startSession() {
   research_only:{questionnaire:researchContext,operator_verification:'unverified',agent_connected:false}};
  db.sessions.push(session);save();
 }
-function event(type,payload={}) {const record={event_id:session.events.length+1,at:new Date().toISOString(),type,...payload};session.events.push(record);save();return record;}
+function event(type,payload={}) {const record={event_id:session.events.length+1,at:new Date().toISOString(),type,...payload};session.events.push(record);save();window.rsSendPlatformEvent?.(record,session.session_id);return record;}
 function toast(text){$('toast').textContent=text;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3500);}
 function activeSession(){if(session.status==='open')return true;toast('这次选择已记录。请点“开始下一次浏览”继续。');return false;}
 function displayState(){return {page_view_id:pageViewId,scene,group,query,sort,page,
@@ -98,11 +98,13 @@ function openItem(id,context=displayState()){if(!activeSession())return;const p=
  <details class="detail-section"><summary>商品与价格来源</summary><p>${esc(p.source)} · ${esc(p.source_item_id)}</p><p>价格直接取自原始 price 字段（USD），原始美元数值不变；人民币另按标明的参考汇率换算。单品采集日期和当前库存未核实。</p><p>商品文字由服务器上的 Qwen 模型机器翻译；品牌、型号与原文保留供核对。</p></details>`;
  $('detail-body').querySelector('[data-compare]').onclick=()=>toggleCompare(id);$('choose-item').onclick=()=>choose(id);
  $('detail-body').querySelectorAll('[data-variant]').forEach(el=>el.onchange=()=>{variants[el.dataset.variant]=el.value;event('variant_change',{item_id:id,attribute:el.dataset.variant,value:el.value,combination_verified:false});});
+ if(!history.state?.detail)history.pushState({detail:id},'',location.pathname+location.search+'#item='+encodeURIComponent(id));
  $('detail-dialog').showModal();updateCompare();
 }
-function closeDialog(id){$(id).close();event('back_or_close',{from:id,item_id:id==='detail-dialog'?currentItem:null});}
+function closeDialog(id){if(id==='detail-dialog'&&history.state?.detail){history.back();return;}$(id).close();event('back_or_close',{from:id,item_id:id==='detail-dialog'?currentItem:null});}
+window.addEventListener('popstate',()=>{if($('detail-dialog').open){$('detail-dialog').close();event('back_or_close',{from:'detail-dialog',item_id:currentItem,via:'browser_history'});currentItem=null;}});
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeDialog(b.dataset.close));
-document.querySelectorAll('dialog').forEach(d=>d.addEventListener('cancel',()=>event('back_or_close',{from:d.id,via:'escape'})));
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('cancel',e=>{if(d.id==='detail-dialog'&&history.state?.detail){e.preventDefault();history.back();}else event('back_or_close',{from:d.id,via:'escape'});}));
 $('compare-open').onclick=()=>{if(!activeSession())return;const products=[...compared].map(id=>itemMap.get(id));
  const context={...displayState(),available_item_ids:products.map(p=>p.id),viewport_item_ids:[],positions:products.map((p,i)=>({item_id:p.id,result_position:i+1,page_position:i+1}))};
  event('comparison_open',{item_ids:products.map(p=>p.id),position_order:products.map(p=>p.id)});
@@ -146,3 +148,6 @@ window.addEventListener('pagehide',()=>{if(session.status==='open')event('page_e
 render();
 
 if(fxReference){$('exchange-note').innerHTML='人民币换算参考：1 USD = '+esc(fxReference.rate)+' CNY，汇率日期 '+esc(fxReference.rate_date)+'。不含税费、运费，不是国内实际售价。 <a href="'+esc(fxReference.source_url)+'" target="_blank" rel="noopener">汇率来源</a>';}
+
+// Read-only observer used by the server recorder; never an Agent action tool.
+window.rsPlatformSnapshot=()=>({...displayState(),current_item:$('detail-dialog').open?currentItem:null,compared:[...compared],visible_text:document.body.innerText.slice(0,24000),last_event_id:session.events.length,session_id:session.session_id,scroll_y:scrollY});

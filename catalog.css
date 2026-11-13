@@ -17,3 +17,6 @@ dialog{border:0;border-radius:8px;padding:0;width:min(1100px,95vw);max-height:92
 @media(max-width:560px){.store-header{padding:13px 14px;min-height:0}.store-intro{padding:12px 16px}.store-intro h1{font-size:21px}.product-card img{height:170px}}
 
 .cart-row{display:flex;gap:20px;padding:20px 0;border-bottom:1px solid #eee}.cart-row img{width:90px;height:90px;object-fit:contain}.card-bottom{flex-wrap:wrap}.card-bottom [data-cart]{width:100%;margin-top:8px}#cart-dialog{width:min(700px,95vw)}[hidden]{display:none!important}
+
+/* Make the next step visible after completing a shopping session. */
+.outcome{scroll-margin:24px}.outcome .outcome-return{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin-top:16px;padding:12px 24px;border-radius:6px;background:var(--green);color:#fff;font-weight:700;font-size:16px;text-decoration:none}.outcome .outcome-return:hover{background:#d94c0c}.outcome .outcome-return:focus-visible{outline:3px solid #222;outline-offset:3px}

@@ -68,7 +68,7 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
         <section id="step-1" aria-labelledby="title-1" hidden>
           <div class="step-label">03 / 这次的需求</div><h2 id="title-1" tabindex="-1">这次想买什么？</h2><p class="lead" id="current-context">从你现在需要解决的问题说起。</p>
           <div class="field"><label for="need">我想买……</label><textarea id="need" maxlength="600" placeholder="先用自己的话说说……"></textarea></div>
-          <div class="field"><label for="reason">还有什么具体问题？<span class="optional">可不填</span></label><textarea id="reason" maxlength="600" placeholder="上面已记下购买原因，这里可补充具体用途"></textarea></div>
+          <textarea id="reason" hidden></textarea>
           <div class="cols"><div class="field"><label for="budget">原本的预算</label><input id="budget" type="text" maxlength="100" placeholder="没定可以留空"></div><div class="field"><label for="timing">打算什么时候买？</label><select id="timing"><option>尚未确定</option><option>这几天</option><option>一到两周内</option><option>一个月内</option><option>更晚一些</option><option>目前只是了解，不急着买</option></select></div></div>
           <div class="field"><label for="purchase-stage">目前的进度</label><select id="purchase-stage"><option>尚未填写</option><option>还在寻找合适的商品</option><option>已经选定具体商品，只需要购买</option><option>尚未决定是否购买</option></select></div>
           <div class="field"><label for="without-study">不参加研究，你也打算买吗？</label><select id="without-study"><option>还没想清楚</option><option>仍准备按原计划购买</option><option>会继续了解，是否购买还不确定</option><option>目前没有购买打算，主要想体验一下</option></select></div>
@@ -403,12 +403,6 @@ function renderSummary(){
   let content=section('生活场景','<p>'+esc(lifeText())+'</p>','life');
   content+=section('过去买用','<p>'+esc(pastItems.length?pastItems.map(x=>x.name).join('；'):'尚未提供历史')+'</p>','history');
   content+=section('这次想买', '<p class="summary-need">'+esc(w.want)+'</p><p class="small">'+esc(budget)+' · '+esc(w.timing||'时间未定')+'</p>'+(w.reason?'<p>'+esc(w.reason)+'</p>':''),1);
-  content+=section('主要用途','<p>'+esc([...g.scenes,g.otherScene].filter(Boolean).join('、')||'还没确定')+'</p>',2);
-  const hard=g.constraints.filter(c=>c.answer==='hard').map(c=>c.label);
-  content+=section('不能接受','<p>'+esc(hard.join('、')||'尚未明确')+'</p>'+(g.otherRequirements?'<p>其他要求：'+esc(g.otherRequirements)+'</p>':''),3);
-  const compared=g.comparisons.filter(c=>c.choice!=='skip');
-  content+=section('这组取舍里',compared.length?compared.map(c=>'<p>'+esc(c.choiceLabel)+(c.reason?'；'+esc(c.reason):'')+'</p>').join(''):'<p>还没确定</p>',4);
-  if(g.otherTradeoff)content+='<p class="small">还在纠结：'+esc(g.otherTradeoff)+'</p>';
   $('summary-card').innerHTML=content;
   $('summary-card').querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>goEdit(['life','history'].includes(b.dataset.edit)?b.dataset.edit:Number(b.dataset.edit))));
 }
@@ -446,7 +440,7 @@ $('next-1').addEventListener('click',()=>{
   const d=rawDraft();if(!d.want){$('error-1').hidden=false;$('need').focus();return;}$('error-1').hidden=true;
   if(!original){original=Object.freeze({...copy(d),capturedAt:NOW()});categoryGuess=guessCategory(d.want);category=categoryGuess;record('initial_unprompted_captured',{data:original});}
   else{record('original_fields_revised',{data:d});const newGuess=guessCategory(d.want);if(newGuess!==categoryGuess){clearGuided('商品描述对应的类别建议改变');categoryGuess=newGuess;category=newGuess;categoryConfirmed=false;}}
-  renderScenes();record('scenes_shown',{category,options:sceneOptionsShown()});setStep(2);
+  record('guidance_skipped',{from:1,reason:'简化问卷'});toSummary();
 });
 $('edit-category').addEventListener('click',()=>{const show=$('category-editor').hidden;$('category-editor').hidden=!show;$('edit-category').setAttribute('aria-expanded',String(show));});
 $('category').addEventListener('change',()=>{const next=$('category').value;clearGuided('用户更改商品类别');category=next;categoryConfirmed=true;$('category-editor').hidden=true;$('edit-category').setAttribute('aria-expanded','false');record('category_changed',{category});renderScenes();record('scenes_shown',{category,options:sceneOptionsShown()});updateData();});
@@ -456,7 +450,7 @@ $('skip-guidance').addEventListener('click',()=>{categoryConfirmed=true;record('
 $('skip-comparison').addEventListener('click',()=>{record('comparison_skipped',{from:step});preparePairs();toSummary();});
 $('back-2').addEventListener('click',()=>setStep(1));$('back-3').addEventListener('click',()=>{renderScenes();setStep(2);});
 $('back-4').addEventListener('click',()=>{persistReason();if(pairIndex>0){pairIndex--;renderPair();updateData();}else{renderAvoids();setStep(3);}});
-$('back-5').addEventListener('click',()=>{preparePairs();renderPair();setStep(4);});
+$('back-5').addEventListener('click',()=>setStep(1));
 $('next-4').addEventListener('click',()=>{persistReason();if(pairQueue.length&&!currentResponse())savePairChoice('skip','continued_without_answer');if(pairIndex<pairQueue.length-1){pairIndex++;renderPair();updateData();$('title-4').focus({preventScroll:true});}else toSummary();});
 $('finish-comparison').addEventListener('click',()=>{if(pairQueue.length)savePairChoice('skip','explicit_skip');record('comparison_skipped',{from:4});toSummary();});
 $('choice-reason').addEventListener('change',()=>{persistReason();updateData();});

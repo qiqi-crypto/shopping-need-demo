@@ -55,18 +55,10 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
         </section>
         <section id="step-history" aria-labelledby="title-history" hidden>
           <div class="step-label">02 / 过去的购买</div><h2 id="title-history" tabindex="-1">看看以前买过什么</h2><p class="lead" id="history-context"></p>
-          <div class="order-intro"><strong>打开淘宝等平台的订单，选几件相关商品。</strong><p>尽量按时间查看，买错、退货的也可以记，不只挑喜欢的。</p><details class="optional-input"><summary>用订单截图帮助回忆（可选）</summary><p class="hint">先遮住姓名、电话、地址和订单号。只选相关商品部分。</p><label for="order-images" class="sr-only">选择已遮挡个人信息的订单截图</label><input id="order-images" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="hint">仅在本页预览，不上传；暂未接入自动识别，请对照截图填写下面的商品。最多 3 张，每张 8 MB。</p><p id="order-image-error" class="error" role="alert" hidden></p><div id="order-image-list" class="order-image-list"></div></details></div>
+          <div class="order-intro"><strong>想想以前买过什么。</strong><p>可以对照淘宝订单截图，填写商品名称。</p><details class="optional-input"><summary>选择淘宝订单截图（可选）</summary><p class="hint">先遮住姓名、电话、地址和订单号。只选相关商品部分。</p><label for="order-images" class="sr-only">选择已遮挡个人信息的订单截图</label><input id="order-images" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="hint">仅在本页预览，不上传；暂未接入自动识别，请对照截图填写下面的商品。最多 3 张，每张 8 MB。</p><p id="order-image-error" class="error" role="alert" hidden></p><div id="order-image-list" class="order-image-list"></div></details></div>
           <div id="history-list" class="history-list" aria-live="polite"></div>
           <form id="history-form" novalidate>
             <div class="history-editor"><div class="field"><label for="past-item">确认一件买过的商品</label><input id="past-item" type="text" maxlength="250" placeholder="商品名称 / 品牌型号，可对照订单填写"></div>
-            <div class="cols"><div class="field"><label for="past-time">大概什么时候买的？</label><input id="past-time" type="text" maxlength="100" placeholder="如 2026 年 8 月；可留空"></div><div class="field"><label for="past-order-state">这笔订单后来怎么样？</label><select id="past-order-state"><option value="unknown">暂不填写</option><option value="completed">已买到 / 保留了</option><option value="refunded">退货 / 退款了</option><option value="cancelled">取消 / 未付款</option><option value="pending">还在等收货</option></select></div></div>
-            <details class="optional-input" id="history-more"><summary>补一句使用感受（可选）</summary>
-              <div class="field"><label for="past-rating">用下来感觉？</label><select id="past-rating"><option value="unknown">暂不评价 / 没用过</option><option value="like">喜欢</option><option value="neutral">一般</option><option value="dislike">不喜欢</option></select></div>
-              <div class="field"><label for="past-reason">喜欢 / 不喜欢哪里？</label><input id="past-reason" type="text" maxlength="400" placeholder="比如一直很好用，或者有哪里不方便"></div>
-              <div class="field"><label for="past-repeat">后来还买过同款吗？</label><select id="past-repeat"><option value="unknown">记不清 / 不适用</option><option value="yes">又买过</option><option value="no">没有</option></select></div>
-              <div class="field"><label for="past-recipient">主要给谁用？</label><select id="past-recipient"><option value="unknown">还没选</option><option value="self">自己</option><option value="household">家人 / 家里共用</option><option value="pet">宠物</option><option value="gift">送人 / 替别人买</option></select></div>
-              <div class="field"><label for="past-link">商品链接或规格</label><input id="past-link" type="text" maxlength="500" placeholder="可不填，不需要订单号或地址"></div>
-            </details>
             <p id="history-error" class="error" role="alert" hidden></p><div class="actions history-actions"><button type="button" class="ghost" id="history-cancel">清空这件</button><button class="secondary" id="history-save" type="submit">记下这件</button></div></div>
           </form>
           <p class="hint">可以继续记几件，也可以跳过。截图不会自动变成购买记录。</p>
@@ -255,9 +247,12 @@ function renderLife(){
  $('life-detail').hidden=!selectedLife||!lifeScenes[selectedLife].sub.length;
  $('life-subscenes').replaceChildren(...(lifeScenes[selectedLife]?.sub||[]).map(label=>{const b=document.createElement('button');b.className='secondary subscene';b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(selectedSub===label));b.addEventListener('click',()=>{selectedSub=selectedSub===label?null:label;record('life_detail_selected',{detail:selectedSub});renderLife();updateData();});return b;}));
 }
-function historyDraft(){return {name:$('past-item').value.trim(),bought:$('past-order-state').value==='cancelled'?'no':'self',used:'unknown',orderState:$('past-order-state').value,rating:$('past-rating').value,reason:$('past-reason').value.trim(),approximateTime:$('past-time').value.trim(),repeat:$('past-repeat').value,recipient:$('past-recipient').value,reference:$('past-link').value.trim()};}
-function historyDirty(){const d=historyDraft();return Boolean(historyEditId||d.name||d.reason||d.approximateTime||d.reference||[d.orderState,d.rating,d.repeat,d.recipient].some(v=>v!=='unknown'));}
-function resetHistoryEditor(){historyEditId=null;$('history-form').reset();$('history-error').hidden=true;$('history-save').textContent='记下这件';$('history-cancel').textContent='清空这件';$('history-more').open=false;}
+function historyDraft(){
+ const old=pastItems.find(x=>x.id===historyEditId);
+ return {name:$('past-item').value.trim(),bought:old?.bought||'self',used:old?.used||'unknown',orderState:old?.orderState||'unknown',rating:old?.rating||'unknown',reason:old?.reason||'',approximateTime:old?.approximateTime||'',repeat:old?.repeat||'unknown',recipient:old?.recipient||'unknown',reference:old?.reference||''};
+}
+function historyDirty(){return Boolean(historyEditId||$('past-item').value.trim());}
+function resetHistoryEditor(){historyEditId=null;$('history-form').reset();$('history-error').hidden=true;$('history-save').textContent='记下这件';$('history-cancel').textContent='清空这件';}
 function saveHistory(){
  const d=historyDraft();let error='';
  if(!d.name)error='先写商品名称；记不全可只写品牌或类别。';
@@ -269,9 +264,9 @@ function saveHistory(){
 }
 function renderHistory(){
  $('history-context').textContent='回忆与这个场景有关的购买。第一次买、没有历史也没关系。';
- $('history-list').replaceChildren(...pastItems.map(item=>{const box=document.createElement('div');box.className='past-card';box.innerHTML='<div class="past-title"><strong>'+esc(item.name)+'</strong><span class="tag">'+esc(historyLabels.rating[item.rating])+'</span></div><p class="small">'+esc(orderStateLabels[item.orderState]||'订单状态未填')+'</p>'+(item.reason?'<p>'+esc(item.reason)+'</p>':'')+'<p class="hint">'+esc([item.approximateTime,item.context.label].filter(Boolean).join(' · '))+'</p>';
+ $('history-list').replaceChildren(...pastItems.map(item=>{const box=document.createElement('div');box.className='past-card';box.innerHTML='<div class="past-title"><strong>'+esc(item.name)+'</strong></div>';
  const actions=document.createElement('div');actions.className='past-actions';
- const edit=document.createElement('button');edit.type='button';edit.className='ghost';edit.textContent='修改';edit.addEventListener('click',()=>{if(historyDirty()&&!saveHistory())return;historyEditId=item.id;const mapping={'past-item':'name','past-order-state':'orderState','past-rating':'rating','past-reason':'reason','past-time':'approximateTime','past-repeat':'repeat','past-recipient':'recipient','past-link':'reference'};Object.entries(mapping).forEach(([id,k])=>$(id).value=item[k]);$('history-save').textContent='保存修改';$('history-cancel').textContent='取消修改';$('past-item').focus();});
+ const edit=document.createElement('button');edit.type='button';edit.className='ghost';edit.textContent='修改';edit.addEventListener('click',()=>{if(historyDirty()&&!saveHistory())return;historyEditId=item.id;$('past-item').value=item.name;$('history-save').textContent='保存修改';$('history-cancel').textContent='取消修改';$('past-item').focus();});
  const remove=document.createElement('button');remove.type='button';remove.className='ghost';remove.textContent='移除';remove.addEventListener('click',()=>{record('history_removed',{item});pastItems=pastItems.filter(x=>x.id!==item.id);if(historyEditId===item.id)resetHistoryEditor();historyStatus=pastItems.length?'provided':'not_answered';renderHistory();updateData();});
  actions.append(edit,remove);box.append(actions);return box;}));
  $('history-skip').hidden=pastItems.length>0;
@@ -406,7 +401,7 @@ function renderSummary(){
   const d=makeDraft(),g=d.guided,w=d.currentWords;
   const budget=w.budget||'预算未定';
   let content=section('生活场景','<p>'+esc(lifeText())+'</p>','life');
-  content+=section('过去买用','<p>'+esc(pastItems.length?pastItems.map(x=>x.name+'（'+(orderStateLabels[x.orderState]||'订单状态未填')+'、'+historyLabels.rating[x.rating]+'）').join('；'):'尚未提供历史')+'</p>','history');
+  content+=section('过去买用','<p>'+esc(pastItems.length?pastItems.map(x=>x.name).join('；'):'尚未提供历史')+'</p>','history');
   content+=section('这次想买', '<p class="summary-need">'+esc(w.want)+'</p><p class="small">'+esc(budget)+' · '+esc(w.timing||'时间未定')+'</p>'+(w.reason?'<p>'+esc(w.reason)+'</p>':''),1);
   content+=section('主要用途','<p>'+esc([...g.scenes,g.otherScene].filter(Boolean).join('、')||'还没确定')+'</p>',2);
   const hard=g.constraints.filter(c=>c.answer==='hard').map(c=>c.label);

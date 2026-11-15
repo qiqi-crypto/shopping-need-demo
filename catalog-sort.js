@@ -28,8 +28,11 @@
    title:(a,b)=>a.title.localeCompare(b.title,'zh-CN')
   }[mode];
   // Equal keys retain catalog order; missing ratings always come last.
-  return compare?result.sort(compare):result;
+  // With a query, keep matching products before other products in every sort mode.
+  // Within each group, the selected price/rating order still applies.
+  const tier=p=>query.trim()&&searchScores&&searchScores.get(p.id)>=1?1:0;
+  return compare?result.sort((a,b)=>tier(b)-tier(a)||compare(a,b)):result;
  }
- const api={sortProducts,version:'catalog-featured-v3',quality,relevance};
+ const api={sortProducts,version:'catalog-featured-v4',quality,relevance};
  if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.catalogSorting=api;
 })(typeof window==='undefined'?globalThis:window);

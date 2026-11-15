@@ -11,7 +11,7 @@
  const prefix='rs_event_outbox_v2:';let busy=false;
  function queued(){const q=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k?.startsWith(prefix)){try{q.push(JSON.parse(localStorage.getItem(k)));}catch{}}}return q.sort((a,b)=>a.record.at.localeCompare(b.record.at)||a.record.event_id-b.record.event_id);}
  function owner(){return run?'run:'+run:window.rsIdentity?.get()?.participant_id;}
- window.rsSendPlatformEvent=(record,sessionId)=>{const id=owner();if(!id)return;try{localStorage.setItem(prefix+record.event_uuid,JSON.stringify({record,sessionId,owner:id}));}catch{window.rsSyncStatus?.('缓存已满，请导出本机记录并保持页面打开。');}};
+ window.rsSendPlatformEvent=(record,sessionId)=>{const id=owner();if(!id)return;try{localStorage.setItem(prefix+record.event_uuid,JSON.stringify({record,sessionId,owner:id}));}catch{window.rsSyncStatus?.('缓存已满，请导出本机记录并保持页面打开。');}if(['cart_add','cart_remove'].includes(record.type))queueMicrotask(flush);};
  async function flush(){
   if(busy)return;const queue=queued(),id=owner(),first=queue.find(x=>x.owner===id);if(!first)return;
   const batch=queue.filter(x=>x.owner===id&&x.sessionId===first.sessionId).sort((a,b)=>a.record.event_id-b.record.event_id).slice(0,50);busy=true;

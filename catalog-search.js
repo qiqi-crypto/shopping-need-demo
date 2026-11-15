@@ -2,7 +2,7 @@
  * No LLM calls. Scores and retrieval mode are recorded with the visible candidates.
  */
 (function(root){'use strict';
- const version='catalog-search-zh-v1';
+ const version='catalog-search-zh-v2';
  const concepts=[
   ['dryrack',['衣物晾晒架','衣物晾衣架','洗衣晾衣架','晾晒衣架','晾晒架','晾衣架','晒衣架','clothes drying rack','laundry drying rack']],
   ['litterbox',['猫砂盆','猫厕所','猫便盆','litter box']],
@@ -43,19 +43,24 @@
   const matches=[];
   for(const [p,d] of docs){
    // A modifier such as "folding" must not outweigh the requested product type.
-   if(anchors.length&&!anchors.some(t=>d.title.includes(t)||d.attributes.includes(t)))continue;
+   const anchorFits=!anchors.length||anchors.some(t=>d.title.includes(t)||d.attributes.includes(t));
    let hit=0,strength=0,n=0;
    for(const t of terms){const field=d.title.includes(t)?1:d.attributes.includes(t)?.45:d.category.includes(t)?.2:0;if(field){hit+=weights.get(t);strength+=weights.get(t)*field;n++;}}
-   const coverage=hit/total;if(n===0||coverage<.35)continue;
+   const coverage=hit/total;
+   if(!anchorFits||n===0||coverage<.35){
+    // Keep weaker items in the catalog, but below every relevant match.
+    if(n)scores.set(p.id,.9*strength/total);
+    continue;
+   }
    const full=n===terms.length;if(full)complete++;
    const score=(full?100:0)+40*coverage+20*strength/total+(d.title.includes(q)?5:0);
    scores.set(p.id,score);matches.push(p);
   }
-  if(matches.length)return {items:matches,scores,mode:complete?'word_matches':'related_matches',matchedCount:matches.length,completeCount:complete,version};
+  if(matches.length)return {items:items.slice(),scores,mode:complete?'word_matches':'related_matches',matchedCount:matches.length,completeCount:complete,version};
   // Typo/variant fallback. At least half of the query bigrams must overlap.
   const qg=grams(query);const close=[];
-  if(qg.size>=2)for(const [p,d] of docs){const n=[...qg].filter(x=>d.grams.has(x)).length;const overlap=n/qg.size;if(n>=2&&overlap>=.5){scores.set(p.id,overlap);close.push(p);}}
-  if(close.length)return {items:close,scores,mode:'near_text_matches',matchedCount:close.length,completeCount:0,version};
+  if(qg.size>=2)for(const [p,d] of docs){const n=[...qg].filter(x=>d.grams.has(x)).length;const overlap=n/qg.size;if(n>=2&&overlap>=.5){scores.set(p.id,10+overlap);close.push(p);}}
+  if(close.length)return {items:items.slice(),scores,mode:'near_text_matches',matchedCount:close.length,completeCount:0,version};
   // Clearly labelled scene suggestions, never described as matching the query.
   return {items:items.slice(),scores,mode:'scene_suggestions',matchedCount:0,completeCount:0,version};
  }

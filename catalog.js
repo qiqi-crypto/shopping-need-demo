@@ -38,7 +38,7 @@ function startSession() {
  session={session_id:'session-'+uid(),user_id:db.user_id,started_at:now,
   session_gap_seconds:previous ? (Date.parse(now)-Date.parse(previous.started_at))/1000 : null,
   recording_owner:document.documentElement.dataset.agentBrowser ? 'agent:'+JSON.parse(sessionStorage.getItem('rs_agent_observer')).run : window.rsIdentity?.get()?.participant_id??null,
-  catalog_version:window.M5_CATALOG.version,interface_version:'storefront-20261115-cart-only',events:[],consideration_steps:[],final_selection:null,
+  catalog_version:window.M5_CATALOG.version,interface_version:'storefront-20261115-sorting-v1',events:[],consideration_steps:[],final_selection:null,
   purchase:{status:'not_observed',item_id:null},status:'open',anchor_source:null,
   research_only:{questionnaire:researchContext,operator_verification:'unverified',agent_connected:false}};
  db.sessions.push(session);sessionStorage.setItem('rs_active_catalog_session',session.session_id);save();event('session_started',{catalog_version:session.catalog_version,interface_version:session.interface_version});
@@ -74,10 +74,7 @@ function renderProducts(){
  let results=allItems.filter(p=>p.scene===scene&&(!group||p.group===group));
  const terms=query.toLowerCase().split(/\s+/).filter(Boolean);
  if(terms.length)results=results.filter(p=>{const hay=[p.title,p.title_cn_navigation,p.category,p.group,p.brand,JSON.stringify(p.attributes)].join(' ').toLowerCase();return terms.every(t=>hay.includes(t));});
- if(sort==='attributes')results.sort((a,b)=>Object.keys(b.attributes).length-Object.keys(a.attributes).length);
- if(sort==='price-asc')results.sort((a,b)=>a.display_price-b.display_price);
- if(sort==='price-desc')results.sort((a,b)=>b.display_price-a.display_price);
- if(sort==='title')results.sort((a,b)=>a.title.localeCompare(b.title,'zh-CN'));
+ results=window.catalogSorting.sortProducts(results,sort);
  const pages=Math.max(1,Math.ceil(results.length/18));page=Math.min(page,pages);shown=results.slice((page-1)*18,page*18);pageViewId='view-'+uid();
  $('result-count').textContent=`${results.length} 件商品 · ${group||'全部品类'}${query?' · 搜索“'+query+'”':''}`;
  $('empty').hidden=results.length>0;
@@ -86,7 +83,7 @@ function renderProducts(){
  $('product-grid').querySelectorAll('[data-cart]').forEach(b=>b.onclick=()=>toggleCart(b.dataset.cart));
  $('pagination').innerHTML=`<button id="prev-page" ${page===1?'disabled':''}>上一页</button><span>${page} / ${pages}</span><button id="next-page" ${page===pages?'disabled':''}>下一页</button>`;
  $('prev-page').onclick=()=>changePage(-1);$('next-page').onclick=()=>changePage(1);
- event('results_rendered',{...displayState(),result_count:results.length,item_snapshots:shown.map((p,i)=>({item_id:p.id,position:i+1,title:p.title,...priceRecord(p),price_status:p.price_status,review_status:p.review_status,attributes_shown:highlights(p),image_src:p.images[0].src}))});
+ event('results_rendered',{...displayState(),sort_version:window.catalogSorting.version,result_count:results.length,item_snapshots:shown.map((p,i)=>({item_id:p.id,position:i+1,title:p.title,...priceRecord(p),price_status:p.price_status,review_status:p.review_status,rating_shown:p.rating??null,rating_count_shown:p.rating_count??null,attributes_shown:highlights(p),image_src:p.images[0].src}))});
  observer=new IntersectionObserver(entries=>{const added=[];for(const entry of entries){const id=entry.target.dataset.item;if(entry.isIntersecting){if(!visible.has(id))added.push(id);visible.add(id);}else visible.delete(id);}if(added.length)event('viewport_exposure',{page_view_id:pageViewId,item_ids:added,visible_item_ids:[...visible],threshold:0.5});},{threshold:0.5});
  $('product-grid').querySelectorAll('.product-card').forEach(el=>observer.observe(el));
  updateCart();
@@ -120,7 +117,7 @@ $('no-selection').onclick=()=>{if(agentBrowserMode)return;if(!activeSession())re
 function finish(status){history.replaceState({},'',location.pathname+location.search);event('session_ended',{status});session.status=status;session.ended_at=new Date().toISOString();save();document.querySelectorAll('dialog[open]').forEach(d=>d.close());observer?.disconnect();document.querySelector('.bottom-bar').hidden=true;$('outcome').hidden=false;$('outcome').innerHTML='<strong>'+ (status==='selected'?'已记录你的选择':'已记录：这次先不选')+'</strong><p>'+ (status==='selected'?esc(itemMap.get(session.final_selection.item_id).title):'没有合适的商品，也是一种有效结果。')+'</p><p>本次记录已保存在当前浏览器，连接后会自动同步。没有产生订单。</p><a class="outcome-return" href="index.html">返回问卷，开始下一次 →</a>';$('outcome').scrollIntoView({behavior:'smooth'});}
 $('new-session').onclick=()=>{if(agentBrowserMode)return;if(session.status==='open'){event('session_ended',{status:'abandoned'});session.status='abandoned';session.ended_at=new Date().toISOString();save();}compared.clear();cart.clear();group='';query='';$('query').value='';page=1;startSession();$('outcome').hidden=true;render();toast('新会话已开始，用户身份保持不变，连接后会自动存到服务器。');};
 $('search-form').onsubmit=e=>{e.preventDefault();if(!activeSession())return;query=$('query').value.trim();page=1;event('search',{query,scene,group});renderProducts();};
-$('sort').onchange=()=>{if(!activeSession())return;sort=$('sort').value;page=1;event('sort_change',{sort});renderProducts();};
+$('sort').onchange=()=>{if(!activeSession())return;sort=$('sort').value;page=1;event('sort_change',{sort,sort_version:window.catalogSorting.version});renderProducts();};
 $('clear-filters').onclick=()=>{if(!activeSession())return;group='';query='';page=1;sort='default';$('query').value='';$('sort').value=sort;event('filters_cleared');render();};
 function platformSession(s){return {user_id:s.user_id,session_id:s.session_id,started_at:s.started_at,ended_at:s.ended_at??null,
  session_gap_seconds:s.session_gap_seconds,catalog_version:s.catalog_version,O_us:s.events,
@@ -143,7 +140,7 @@ if(researchContext?.confirmedNeed?.currentWords?.want){$('need-context').hidden=
 const currentOwner=()=>document.documentElement.dataset.agentBrowser ? 'agent:'+JSON.parse(sessionStorage.getItem('rs_agent_observer')).run : window.rsIdentity?.get()?.participant_id??null;
 const activeId=sessionStorage.getItem('rs_active_catalog_session');
 const last=db.sessions.find(s=>s.session_id===activeId);
-if(last?.status==='open' && last.recording_owner===currentOwner() && last.catalog_version===window.M5_CATALOG.version && last.interface_version==='storefront-20261115-cart-only' && (last.research_only?.questionnaire?.confirmedNeed?.confirmedAt??null)===(researchContext?.confirmedNeed?.confirmedAt??null)){
+if(last?.status==='open' && last.recording_owner===currentOwner() && last.catalog_version===window.M5_CATALOG.version && last.interface_version==='storefront-20261115-sorting-v1' && (last.research_only?.questionnaire?.confirmedNeed?.confirmedAt??null)===(researchContext?.confirmedNeed?.confirmedAt??null)){
  session=last;event('session_resumed',{catalog_version:window.M5_CATALOG.version});
 }else{startSession();}
 window.addEventListener('rs-identity-changed',()=>{

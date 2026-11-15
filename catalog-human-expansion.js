@@ -91,18 +91,18 @@ function render(){renderSceneTabs();renderGroups();renderProducts();}
 function renderProducts(){
  observer?.disconnect();visible.clear();
  let results=allItems.filter(p=>p.scene===scene&&(!group||p.group===group));
- const terms=query.toLowerCase().split(/\s+/).filter(Boolean);
- if(terms.length)results=results.filter(p=>{const hay=[p.title,p.title_cn_navigation,p.category,p.group,p.brand,JSON.stringify(p.attributes)].join(' ').toLowerCase();return terms.every(t=>hay.includes(t));});
- results=window.catalogSorting.sortProducts(results,sort,query);
+ const retrieval=window.catalogSearch.search(results,query);
+ results=window.catalogSorting.sortProducts(retrieval.items,sort,query,retrieval.scores);
+ if(retrieval.mode==='scene_suggestions')results=results.slice(0,36);
  const pages=Math.max(1,Math.ceil(results.length/18));page=Math.min(page,pages);shown=results.slice((page-1)*18,page*18);pageViewId='view-'+uid();
- $('result-count').textContent=`${results.length} 件商品 · ${group||'全部品类'}${query?' · 搜索“'+query+'”':''}`;
+ $('result-count').textContent=retrieval.mode==='scene_suggestions'?'未找到相关商品，先看看本场景的其他商品':`${results.length} 件${['related_matches','near_text_matches'].includes(retrieval.mode)?'相近商品':'商品'} · ${group||'全部品类'}${query?' · 搜索“'+query+'”':''}`;
  $('empty').hidden=results.length>0;
  $('product-grid').innerHTML=shown.map(p=>`<article class="product-card" data-item="${esc(p.id)}"><button class="image-button" data-open="${esc(p.id)}" aria-label="查看 ${esc(p.title)}"><img src="${esc(p.images[0].src)}" alt="${esc(p.title)}" loading="lazy"></button><div class="card-copy"><span class="category-tag">${esc(p.category)}</span><button class="title-button" data-open="${esc(p.id)}">${esc(p.title)}</button><div class="spec-chips">${highlights(p).map(t=>`<span title="${esc(t)}">${esc(t)}</span>`).join('')}</div><div class="price">${esc(priceLabel(p))}<small class="price-caption">人民币参考价</small></div><div class="card-bottom"><small>${esc(ratingLabel(p))}</small><button class="primary" data-cart="${esc(p.id)}">${cart.has(p.id)?'已加入购物车':'加入购物车'}</button></div></div></article>`).join('');
  $('product-grid').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openItem(b.dataset.open));
  $('product-grid').querySelectorAll('[data-cart]').forEach(b=>b.onclick=()=>toggleCart(b.dataset.cart));
  $('pagination').innerHTML=`<button id="prev-page" ${page===1?'disabled':''}>上一页</button><span>${page} / ${pages}</span><button id="next-page" ${page===pages?'disabled':''}>下一页</button>`;
  $('prev-page').onclick=()=>changePage(-1);$('next-page').onclick=()=>changePage(1);
- event('results_rendered',{...displayState(),sort_version:window.catalogSorting.version,result_count:results.length,item_snapshots:shown.map((p,i)=>({item_id:p.id,position:i+1,title:p.title,...priceRecord(p),price_status:p.price_status,review_status:p.review_status,rating_shown:p.rating??null,rating_count_shown:p.rating_count??null,attributes_shown:highlights(p),image_src:p.images[0].src}))});
+ event('results_rendered',{...displayState(),sort_version:window.catalogSorting.version,search_version:retrieval.version,search_mode:retrieval.mode,matched_result_count:retrieval.matchedCount,result_count:results.length,search_scores:shown.map(p=>({item_id:p.id,score:retrieval.scores.get(p.id)??null})),item_snapshots:shown.map((p,i)=>({item_id:p.id,position:i+1,title:p.title,...priceRecord(p),price_status:p.price_status,review_status:p.review_status,rating_shown:p.rating??null,rating_count_shown:p.rating_count??null,attributes_shown:highlights(p),image_src:p.images[0].src}))});
  observer=new IntersectionObserver(entries=>{const added=[];for(const entry of entries){const id=entry.target.dataset.item;if(entry.isIntersecting){if(!visible.has(id))added.push(id);visible.add(id);}else visible.delete(id);}if(added.length)event('viewport_exposure',{page_view_id:pageViewId,item_ids:added,visible_item_ids:[...visible],threshold:0.5});},{threshold:0.5});
  $('product-grid').querySelectorAll('.product-card').forEach(el=>observer.observe(el));
  updateCart();

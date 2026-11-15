@@ -23,3 +23,10 @@ The server allocates human→Agent or Agent→human once for each participant an
 The list exit moved into the cart. Repeated transaction/storage caveats were removed from choice/outcome dialogs; the entry page still identifies simulated shopping. HTML break tags in review text become line breaks without executing HTML.
 
 Human and Browser Use now share the same 20,000-item immutable catalog (5,000 per scene), ordering, details, prices, and server-side item validation. Both use `/api/catalog`; the original `/api/human-catalog` endpoints remain for cached clients. The legacy `human-expansion-<hash>` session version is deliberately preserved to avoid breaking ongoing human sessions; it now identifies the shared snapshot. Before a formal source-comparison study, account for learning/carryover between repeated tasks. Final selections are still stored separately from verified purchases.
+
+
+## Search and participant controls (2026-11-15)
+
+Human and Browser Use now share Chinese word/synonym retrieval. Matching does not require the entire query to be a contiguous title substring. Full word coverage ranks before partial matches, with the existing quality prior as a tie-breaker; explicitly selected price/rating ordering is preserved. Unrelated queries show labelled scene suggestions, with zero matched results recorded separately. `results_rendered` logs retrieval version, mode, scores and actual shown candidates for reproducibility. This is deterministic lexical retrieval, not an embedding or LLM semantic search service.
+
+Participant-facing pause/resume buttons have been removed. Feedback continues the task; opening the cart waits for a safe action boundary and opens automatically. Internal pause/resume remains available for this handoff and error recovery, rather than requiring participants to manage the agent loop.

@@ -7,7 +7,7 @@ window.showProductReviews=async function(container,itemId,onLoaded){
  if(!/^[A-Z0-9]{10}$/.test(id))return;
  container.textContent='正在加载评价…';
  try{
-  const r=await fetch(window.SHOPPING_AGENT_API+'/data/reviews/'+id+'.json',{cache:'no-cache'});
+  const r=await fetch((document.documentElement.dataset.agentBrowser==='true'?location.origin:window.SHOPPING_AGENT_API)+'/data/reviews/'+id+'.json',{cache:'no-cache'});
   if(r.status===404){container.textContent='暂未收录文字评价。';return;}
   if(!r.ok)throw Error('unavailable');
   const data=await r.json();if(data.item_id!==itemId||data.language!=='zh-CN'||!Array.isArray(data.reviews))throw Error('invalid');

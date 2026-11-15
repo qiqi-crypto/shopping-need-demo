@@ -27,14 +27,13 @@ let researchContext = null;
 try {researchContext=JSON.parse(sessionStorage.getItem('rs_need_handoff_v1') || 'null');} catch {}
 const initialScene = new URLSearchParams(location.search).get('scene');
 let scene = SCENES[initialScene] ? initialScene : 'baby';
-// Human-only expansion is staged behind a validated server snapshot. The Agent
-// browser continues to use exactly the original, embedded catalog.
+// Both operators load identical scene data. Agent browser uses the local server origin.
 let humanLoader=null,humanManifest=null;
-if(!agentBrowserMode){
+{
  document.querySelector('.catalog-total').textContent='商品加载中…';
  $('result-count').textContent='正在加载商品，请稍候…';
  try{
-  humanLoader=window.createHumanCatalogLoader({baseUrl:window.SHOPPING_AGENT_API,items:allItems,itemMap});
+  humanLoader=window.createHumanCatalogLoader({baseUrl:agentBrowserMode?location.origin:window.SHOPPING_AGENT_API,items:allItems,itemMap});
   humanManifest=await humanLoader.initialize();await humanLoader.load(scene);
   document.querySelector('.catalog-total').textContent=Object.values(humanManifest.counts).reduce((a,b)=>a+b,0).toLocaleString('zh-CN')+' 件商品，慢慢挑';
   window.M5_CATALOG.version='human-expansion-'+humanManifest.revision;
@@ -81,7 +80,7 @@ function renderSceneTabs() {
  $('scene-heading').textContent=SCENE_COPY[scene][0];$('scene-description').textContent=SCENE_COPY[scene][1];
  $('scene-tabs').innerHTML=Object.entries(SCENES).map(([id,label])=>`<button data-scene="${id}" aria-pressed="${scene===id}">${label} <small>· ${humanManifest?.counts?.[id]??allItems.filter(p=>p.scene===id).length}</small></button>`).join('');
  $('scene-tabs').querySelectorAll('button').forEach(b=>b.onclick=async()=>{if(!activeSession())return;const next=b.dataset.scene;
-  if(!agentBrowserMode){const buttons=[...$('scene-tabs').querySelectorAll('button')];buttons.forEach(x=>x.disabled=true);try{await humanLoader.load(next);}catch(e){toast(e.message);return;}finally{buttons.forEach(x=>x.disabled=false);}}
+  {const buttons=[...$('scene-tabs').querySelectorAll('button')];buttons.forEach(x=>x.disabled=true);try{await humanLoader.load(next);}catch(e){toast(e.message);return;}finally{buttons.forEach(x=>x.disabled=false);}}
   scene=next;group='';query='';$('query').value='';page=1;event('scene_filter',{scene});render();});
 }
 function renderGroups(){const counts={};allItems.filter(p=>p.scene===scene).forEach(p=>counts[p.group]=(counts[p.group]||0)+1);
@@ -173,7 +172,7 @@ window.addEventListener('rs-identity-changed',()=>{
 });
 window.addEventListener('pagehide',()=>{if(session.status==='open')event('page_exit',{page_view_id:pageViewId});});
 if(agentBrowserMode){for(const id of ['new-session','no-selection','confirm-choice','open-records']){$(id).disabled=true;$(id).hidden=true;}document.querySelectorAll('.utility-bar nav,.need-entry').forEach(n=>n.hidden=true);}
-if(!agentBrowserMode&&(session.cart||[]).some(id=>!itemMap.has(id))){
+if((session.cart||[]).some(id=>!itemMap.has(id))){
  try{for(const id of Object.keys(SCENES))await humanLoader.load(id);}
  catch(e){toast('购物车商品暂时无法加载，请刷新重试。');return;}
 }

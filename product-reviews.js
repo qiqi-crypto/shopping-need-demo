@@ -1,4 +1,7 @@
 /* Only source-matched, validated review translations are delivered here. */
+window.cleanReviewText=function(value){
+ return String(value).replace(/&lt;\s*br\s*\/?\s*&gt;/gi,'\n').replace(/\\?<\s*br\s*\/?\s*>/gi,'\n').replace(/<\/p\s*>/gi,'\n\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\n{3,}/g,'\n\n').trim();
+};
 window.showProductReviews=async function(container,itemId,onLoaded){
  const id=String(itemId).replace(/^amz23:/,'');
  if(!/^[A-Z0-9]{10}$/.test(id))return;
@@ -17,7 +20,7 @@ window.showProductReviews=async function(container,itemId,onLoaded){
    const meta=document.createElement('p');meta.className='review-meta';
    const date=Number.isFinite(review.timestamp)?new Date(review.timestamp).toISOString().slice(0,10):'';
    meta.textContent='★ '+review.rating+' / 5'+(date?' · '+date:'');
-   const text=document.createElement('p');text.textContent=review.text;card.append(meta,text);container.append(card);
+   const text=document.createElement('p');text.textContent=window.cleanReviewText(review.text);card.append(meta,text);container.append(card);
   }
   onLoaded?.({review_ids:data.reviews.map(r=>r.review_id),review_revision:data.revision});
  }catch{if(container.isConnected)container.textContent='评价暂时加载失败，请稍后再打开。';}

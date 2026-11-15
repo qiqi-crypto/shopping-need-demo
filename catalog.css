@@ -22,3 +22,6 @@ dialog{border:0;border-radius:8px;padding:0;width:min(1100px,95vw);max-height:92
 .outcome{scroll-margin:24px}.outcome .outcome-return{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin-top:16px;padding:12px 24px;border-radius:6px;background:var(--green);color:#fff;font-weight:700;font-size:16px;text-decoration:none}.outcome .outcome-return:hover{background:#d94c0c}.outcome .outcome-return:focus-visible{outline:3px solid #222;outline-offset:3px}
 
 .buyer-review{border-top:1px solid #eee;padding:14px 0}.buyer-review p{white-space:pre-line;line-height:1.8}.review-meta{color:#a34c12;font-size:13px}.review-note{color:#777;font-size:13px}.card-bottom{flex-wrap:wrap}
+
+/* Keep cart/confirmation labels legible while hovered or focused. */
+.primary{background:#c7440b;border-color:#c7440b;color:#fff}.primary:hover{background:#aa3606;border-color:#aa3606;color:#fff}

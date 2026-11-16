@@ -18,7 +18,30 @@ function error(e){el('feedback-status').textContent=e.message;}
 el('chat-form').onsubmit=async e=>{e.preventDefault();const text=el('message').value.trim();if(!text)return;el('send').disabled=true;try{if(!run){const participant=await window.rsIdentity.ensure(el('invite').value.trim());run=await(await api('/api/sessions',{method:'POST',body:JSON.stringify({invite:el('invite').value.trim(),scene:el('scene').value,message:text,participant_token:participant.token})})).json();sessionStorage.setItem('shopping_agent_session',JSON.stringify(run));sessionStorage.setItem('shopping_agent_invite',el('invite').value.trim());sessionUI();}else {await api('/api/sessions/'+run.id+'/message',{method:'POST',body:JSON.stringify({text})});if(latestState?.status==='paused')await api('/api/sessions/'+run.id+'/control/resume',{method:'POST'});}el('message').value='';el('feedback-status').textContent='已收到。当前动作完成后，将在下一步决策前采用反馈。';await poll();}catch(e){error(e);}finally{el('send').disabled=false;}};
 const statuses={stopping:'正在结束，当前动作可能需要几秒钟收尾',starting:'正在启动浏览器…',running:'正在查看页面并决定下一步',waiting_for_user:'正在等你回答，再继续找',waiting_for_feedback:'这一轮已完成，可以继续提要求',paused:'请补充要求，我会接着找',closed:'这次浏览已结束',error:'运行中遇到问题，请查看操作记录'};
 const names={input:'输入',click:'点击',go_back:'返回',scroll:'滚动',navigate:'打开页面',send_keys:'键盘操作',select_dropdown:'选择筛选项',dropdown_options:'查看筛选项',find_text:'查找页面文字',wait:'等待',ask_user:'询问用户',tell_user:'说明进展',done:'给出建议'};
-let finishRequested=false,lastCartSignature='';
+let finishRequested=false,lastCartSignature='',lastToolView='';
+const toolNames={search_products:'搜索商品',get_products:'查看商品详情',get_reviews:'查看买家评价',get_cart:'查看购物车',update_cart:'更新购物车'};
+function renderToolView(s){
+ if(s.engine!=='catalog-tools')return;
+ document.querySelector('.pointer-note').hidden=true;
+ document.querySelector('.footnote').textContent='商品价格统一为人民币参考价。';
+ el('live-screen').hidden=true;
+ if(!s.tool_view)return;
+ el('screen-empty').hidden=true;el('tool-view').hidden=false;
+ const view=s.tool_view,signature=JSON.stringify(view);if(signature===lastToolView)return;lastToolView=signature;
+ el('tool-view-title').textContent=view.kind==='search_products'?'正在找：'+(view.query||'本场景商品'):'正在查看这些商品';
+ el('tool-products').replaceChildren(...view.products.map(p=>{
+  const card=document.createElement('article');card.className='tool-product';
+  const image=document.createElement('img');image.src=p.image;image.alt='';
+  const title=document.createElement('h3');title.textContent=p.title;
+  const price=document.createElement('b');price.textContent='¥'+Number(p.price).toFixed(2);
+  const rating=document.createElement('small');rating.textContent=p.rating?'★ '+p.rating+' · '+(p.rating_count||0)+' 条评分':'';
+  card.append(image,title,price,rating);
+  if(p.attributes){const specs=document.createElement('p');specs.textContent=Object.entries(p.attributes).slice(0,4).map(([k,v])=>k+'：'+(Array.isArray(v)?v.join(' / '):v)).join('；');card.append(specs);}
+  return card;
+ }));
+ if(!view.products.length){const text=document.createElement('p');text.textContent='当前条件没有合适商品，助手正在为你调整。';el('tool-products').append(text);}
+}
+
 function renderLiveCart(s){
  const cart=s.cart||[],signature=JSON.stringify(cart);
  el('preview-cart').disabled=!run||!!s.choice||['starting','stopping'].includes(s.status);
@@ -30,8 +53,8 @@ function renderLiveCart(s){
  if(el('agent-cart').open)showCart();
 }
 el('preview-cart').onclick=()=>el('finish-shopping').click();
-async function poll(){if(!run||polling)return;polling=true;try{const s=await(await api('/api/sessions/'+run.id)).json();latestState=s;renderLiveCart(s);el('finish-shopping').disabled=!!s.choice||['stopping','starting'].includes(s.status);el('status').textContent=statuses[s.status]||s.status;el('step').textContent='第 '+s.step+' 步';if(s.messages.length!==lastMessageCount){el('messages').replaceChildren(...s.messages.map(m=>{const d=document.createElement('div');d.className='message '+m.role;d.textContent=m.text;return d;}));lastMessageCount=s.messages.length;el('messages').scrollTop=el('messages').scrollHeight;}
- const steps=s.timeline.filter(t=>['step_completed','feedback_applied','agent_question','run_error'].includes(t.type));el('timeline').replaceChildren(...steps.map(t=>{const li=document.createElement('li');if(t.type==='step_completed'){li.textContent='第 '+t.step+' 步 · '+(t.actions||[]).map(a=>{const k=Object.keys(a)[0];return (names[k]||k)+(a[k].question?'：'+a[k].question:'');}).join('；')+' · 反馈版本 '+t.feedback_version;}else if(t.type==='feedback_applied')li.textContent='已采用第 '+t.feedback_version+' 版需求（从第 '+t.effective_next_step+' 步起）';else li.textContent=t.text||t.message;return li;}));el('trace-count').textContent='（'+s.step+' 步）';el('feedback-status').textContent=s.queued_feedback?'补充要求已收到，等待下一步采用。':s.feedback_version?'已采用第 '+s.feedback_version+' 版需求。':'';
+async function poll(){if(!run||polling)return;polling=true;try{const s=await(await api('/api/sessions/'+run.id)).json();latestState=s;renderLiveCart(s);renderToolView(s);el('finish-shopping').disabled=!!s.choice||['stopping','starting'].includes(s.status);el('status').textContent=s.engine==='catalog-tools'&&['starting','running'].includes(s.status)?'正在搜索和挑选商品…':statuses[s.status]||s.status;el('step').textContent='第 '+s.step+' 步';if(s.messages.length!==lastMessageCount){el('messages').replaceChildren(...s.messages.map(m=>{const d=document.createElement('div');d.className='message '+m.role;d.textContent=m.text;return d;}));lastMessageCount=s.messages.length;el('messages').scrollTop=el('messages').scrollHeight;}
+ const steps=s.timeline.filter(t=>['step_completed','tool_completed','feedback_applied','agent_question','run_error'].includes(t.type));el('timeline').replaceChildren(...steps.map(t=>{const li=document.createElement('li');if(t.type==='step_completed'){li.textContent='第 '+t.step+' 步 · '+(t.actions||[]).map(a=>{const k=Object.keys(a)[0];return (names[k]||k)+(a[k].question?'：'+a[k].question:'');}).join('；')+' · 反馈版本 '+t.feedback_version;}else if(t.type==='tool_completed')li.textContent='第 '+t.step+' 步 · '+(toolNames[t.tool]||t.tool)+(t.result_count!==null?' · '+t.result_count+' 件':'')+(t.success?'':' · 未完成');else if(t.type==='feedback_applied')li.textContent='已采用第 '+t.feedback_version+' 版需求（从第 '+t.effective_next_step+' 步起）';else li.textContent=t.text||t.message;return li;}));el('trace-count').textContent='（'+s.step+' 步）';el('feedback-status').textContent=s.queued_feedback?'补充要求已收到，等待下一步采用。':s.feedback_version?'已采用第 '+s.feedback_version+' 版需求。':'';
  if(s.has_screenshot&&(s.screenshot_revision||String(s.step)+s.status)!==lastScreenshotRevision){const blob=await(await api('/api/sessions/'+run.id+'/screenshot')).blob();if(latestBlob)URL.revokeObjectURL(latestBlob);latestBlob=URL.createObjectURL(blob);el('live-screen').src=latestBlob;el('live-screen').hidden=false;el('screen-empty').hidden=true;lastScreenshotRevision=s.screenshot_revision||String(s.step)+s.status;}
  if(['closed','error'].includes(s.status)){el('send').disabled=true;el('stop').textContent='已结束';el('stop').disabled=true;}
  if(finishRequested&&['waiting_for_user','waiting_for_feedback','paused','closed','error'].includes(s.status)){finishRequested=false;showCart();}

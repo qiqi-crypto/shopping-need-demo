@@ -31,8 +31,8 @@ let group = '', query = '', sort = 'default', page = 1, shown = [], visible = ne
 let detailOpenedAt = null;
 let cart=new Set();
 let currentItem = null, pendingChoice = null, variants = {}, pageViewId = '', availableSnapshot = null;
-let session, observer;
-function save() {try {localStorage.setItem(STORE_KEY,JSON.stringify(db));} catch {storageOkay=false;}}
+let session, observer,stopPresence=null;
+function save() {try {const checkpoint={...db,sessions:db.sessions.slice(-20).map(s=>({...s,events:s.events.slice(-200),local_copy_is_tail:true}))};localStorage.setItem(STORE_KEY,JSON.stringify(checkpoint));} catch {storageOkay=false;window.rsSyncStatus?.('本机空间不足，请保持页面联网保存记录。');}}
 function startSession() {
  const previous=db.sessions.at(-1), now=new Date().toISOString();
  session={session_id:'session-'+uid(),user_id:db.user_id,started_at:now,
@@ -43,7 +43,7 @@ function startSession() {
   research_only:{questionnaire:researchContext,operator_verification:'unverified',agent_connected:false}};
  db.sessions.push(session);sessionStorage.setItem('rs_active_catalog_session',session.session_id);save();event('session_started',{catalog_version:session.catalog_version,interface_version:session.interface_version});
 }
-function event(type,payload={}) {const record={schema_version:'rs-platform-event-v2',event_uuid:uid(),event_id:session.events.length+1,at:new Date().toISOString(),viewport:{width:innerWidth,height:innerHeight},type,...payload};session.events.push(record);save();window.rsSendPlatformEvent?.(record,session.session_id);return record;}
+function event(type,payload={}) {const record={schema_version:'rs-platform-event-v2',event_uuid:uid(),event_id:(session.last_event_id??session.events.at(-1)?.event_id??0)+1,at:new Date().toISOString(),...(window.rsEventClock?.envelope()||{}),viewport:{width:innerWidth,height:innerHeight},type,...payload};session.last_event_id=record.event_id;session.events.push(record);save();window.rsSendPlatformEvent?.(record,session.session_id);return record;}
 window.rsRecordBrowserInteraction=(type,payload)=>{if(session?.status==='open')event(type,{...payload,surface:document.querySelector('dialog[open]')?.id||'page',item_id:document.querySelector('#detail-dialog[open]')?currentItem:null});};
 function toast(text){$('toast').textContent=text;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3500);}
 function activeSession(){if(session.status==='open')return true;toast('这次已结束。可以返回问卷开始下一次。');return false;}
@@ -85,7 +85,7 @@ function renderProducts(){
  $('pagination').innerHTML=`<button id="prev-page" ${page===1?'disabled':''}>上一页</button><span>${page} / ${pages}</span><button id="next-page" ${page===pages?'disabled':''}>下一页</button>`;
  $('prev-page').onclick=()=>changePage(-1);$('next-page').onclick=()=>changePage(1);
  event('results_rendered',{...displayState(),sort_version:window.catalogSorting.version,result_count:results.length,item_snapshots:shown.map((p,i)=>({item_id:p.id,position:i+1,title:p.title,...priceRecord(p),price_status:p.price_status,review_status:p.review_status,rating_shown:p.rating??null,rating_count_shown:p.rating_count??null,attributes_shown:highlights(p),image_src:p.images[0].src}))});
- observer=new IntersectionObserver(entries=>{const added=[];for(const entry of entries){const id=entry.target.dataset.item;if(entry.isIntersecting){if(!visible.has(id))added.push(id);visible.add(id);}else visible.delete(id);}if(added.length)event('viewport_exposure',{page_view_id:pageViewId,item_ids:added,visible_item_ids:[...visible],threshold:0.5});},{threshold:0.5});
+ observer=new IntersectionObserver(entries=>{const added=[];for(const entry of entries){const id=entry.target.dataset.item;if(entry.isIntersecting&&entry.intersectionRatio>=.5){if(!visible.has(id))added.push(id);visible.add(id);}else visible.delete(id);}if(added.length)event('viewport_exposure',{page_view_id:pageViewId,item_ids:added,visible_item_ids:[...visible],threshold:0.5});},{threshold:0.5});
  $('product-grid').querySelectorAll('.product-card').forEach(el=>observer.observe(el));
  updateCart();
 }
@@ -116,7 +116,7 @@ $('cart-open').onclick=()=>{if(!activeSession())return;event('cart_open',{item_i
 function choose(id){if(!activeSession())return;consider(id,'explicit_final_choice',{available_item_ids:[...cart],viewport_item_ids:[],positions:[...cart].map((item_id,i)=>({item_id,result_position:i+1}))});pendingChoice={item_id:id,variant_options:id===currentItem?{...variants}:{},displayed_price:itemMap.get(id).display_price,currency:'CNY',source_price:itemMap.get(id).price,source_currency:'USD',price_conversion:itemMap.get(id).price_conversion,fx_reference:fxReference,price_status:'converted_historical_reference'};$('choice-title').textContent=itemMap.get(id).title;$('choice-dialog').showModal();event('selection_proposed',pendingChoice);}
 $('confirm-choice').onclick=()=>{if(agentBrowserMode)return;if(!activeSession())return;const choice={...pendingChoice,at:new Date().toISOString(),kind:'preview_preference_selection',price_accepted:false};session.final_selection=choice;event('selection_confirmed',choice);finish('selected');};
 $('no-selection').onclick=()=>{if(agentBrowserMode)return;if(!activeSession())return;session.final_selection={item_id:null,at:new Date().toISOString(),kind:'explicit_no_selection'};event('no_selection');finish('no_selection');};
-function finish(status){history.replaceState({},'',location.pathname+location.search);event('session_ended',{status});session.status=status;session.ended_at=new Date().toISOString();save();showOutcome(status);}
+function finish(status){stopPresence?.();history.replaceState({},'',location.pathname+location.search);event('session_ended',{status});session.status=status;session.ended_at=new Date().toISOString();save();showOutcome(status);}
 function showOutcome(status){document.querySelectorAll('dialog[open]').forEach(d=>d.close());observer?.disconnect();document.querySelector('.bottom-bar').hidden=true;$('outcome').hidden=false;$('outcome').innerHTML='<strong>'+ (status==='selected'?'已记录你的选择':'已记录：这次先不选')+'</strong><p>'+ (status==='selected'?esc(itemMap.get(session.final_selection.item_id).title):'这轮没有选中商品。')+'</p><div id="round-next"></div>';window.showRoundNext?.($('round-next'),{client_id:session.session_id});$('outcome').scrollIntoView({behavior:'smooth'});}
 $('new-session').onclick=()=>{if(agentBrowserMode)return;if(session.status==='open'){event('session_ended',{status:'abandoned'});session.status='abandoned';session.ended_at=new Date().toISOString();save();}compared.clear();cart.clear();group='';query='';$('query').value='';page=1;startSession();$('outcome').hidden=true;render();toast('新会话已开始，用户身份保持不变，连接后会自动存到服务器。');};
 $('search-form').onsubmit=e=>{e.preventDefault();if(!activeSession())return;query=$('query').value.trim();page=1;event('search',{query,scene,group});renderProducts();};
@@ -157,9 +157,11 @@ window.addEventListener('pagehide',()=>{if(session.status==='open')event('page_e
 if(agentBrowserMode){for(const id of ['new-session','no-selection','confirm-choice','open-records']){$(id).disabled=true;$(id).hidden=true;}document.querySelectorAll('.utility-bar nav,.need-entry').forEach(n=>n.hidden=true);}
 cart=new Set(session.cart||[]);if(['selected','no_selection'].includes(session.status)){renderSceneTabs();renderGroups();showOutcome(session.status);}else render();
 
+stopPresence=window.rsStartPresence?.(event,()=>session?.status==='open',()=>({surface:document.querySelector('dialog[open]')?.id||'catalog',item_id:document.querySelector('#detail-dialog[open]')?currentItem:null,page_view_id:pageViewId}));
+
 if(fxReference){$('exchange-note').innerHTML='价格统一为人民币参考价，按 '+esc(fxReference.rate_date)+' 固定汇率换算；不是当前实际售价。';}
 
 // Read-only observer used by the server recorder; never an Agent action tool.
-window.rsPlatformSnapshot=()=>({...displayState(),current_item:$('detail-dialog').open?currentItem:null,compared:[...compared],cart:[...cart],last_pointer:window.rsLastPointer||null,visible_text:document.body.innerText.slice(0,24000),last_event_id:session.events.length,session_id:session.session_id,scroll_y:scrollY});
+window.rsPlatformSnapshot=()=>({...displayState(),current_item:$('detail-dialog').open?currentItem:null,compared:[...compared],cart:[...cart],last_pointer:window.rsLastPointer||null,visible_text:document.body.innerText.slice(0,24000),last_event_id:session.last_event_id??session.events.at(-1)?.event_id??0,session_id:session.session_id,scroll_y:scrollY});
 
 })();

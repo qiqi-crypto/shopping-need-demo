@@ -143,7 +143,7 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
   </div>
   <p class="footer">演示版 · 需求确认后进入购物说明。浏览与对话按实验说明记录。<br></p>
 </main>
-<script src="study-config.js?v=20261115"></script><script src="purchase-history.js?v=20261115-flow4"></script>
+<script src="agent-config.js?v=20261116-dataset1"></script><script src="event-clock.js?v=20261116-dataset1"></script><script src="event-journal.js?v=20261116-dataset1"></script><script src="visit-telemetry.js?v=20261116-dataset1"></script><script src="study-config.js?v=20261115"></script><script src="purchase-history.js?v=20261115-flow4"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -333,7 +333,7 @@ function makeDraft(){return {lifeContext:lifeContext(),reportedHistory:historyMe
 function dataSnapshot(){return {prototypeVersion:'order-context-v2',notice:'研究讨论原型；以下仅在本页内存中。自报历史与真实购物轨迹分别保存。',researchOnly:{lifeContext:lifeContext(),reportedHistory:historyMethod==='manual'?copy(pastItems):[],reportedHistorySource:{method:historyMethod,screenshotCount:historyMethod==='screenshot'?orderPreviews.length:0,transcriptionStatus:historyMethod==='screenshot'?'pending':'not_required'},historyStatus,initialBeforeAttributeGuidance:original,currentDraft:makeDraft(),confirmedNeed:baseline,demonstrationRoute:route,events,feedbacks},RS_Agent_Input:{storefrontEvents:[],note:'尚未进入商城。问卷历史不是完整商城轨迹；偏好初始化尚未接入。当前需求、对话和实验条件不作为来源预测特征。'}};}
 function updateData(){$('data-preview').textContent=JSON.stringify(dataSnapshot(),null,2);}
 function setStep(next){
-  step=next;
+  step=next;window.rsVisitEvent?.('questionnaire_step',{step:String(next)});
   $('task-context').hidden=next==='life'||next==='none'||next==='history';$('task-context-scene').textContent=lifeContext().label;$('task-context-reason').textContent='为什么现在需要：'+(lifeContext().reason||'尚未说明');
   ['life','history',1,2,3,4,5,6].forEach(n=>$('step-'+n).hidden=n!==next);
   $('no-need-state').hidden=next!=='none';

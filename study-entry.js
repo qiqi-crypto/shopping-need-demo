@@ -12,6 +12,7 @@
   go.disabled=true;status.textContent='';
   try{
    await window.rsIdentity.ensure($('entry-code').value.trim());
+   await window.rsLinkVisit?.();
    ctx=await window.purchaseHistory.submit(ctx);
    let a=await window.rsIdentity.request('/api/participant/study',{context:ctx});
    const freshNeed=ctx.confirmedNeed.confirmedAt&&ctx.confirmedNeed.confirmedAt!==a.context?.confirmedNeed?.confirmedAt;

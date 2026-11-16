@@ -3,36 +3,20 @@
 'use strict';
 window.createAgentCartDetails = function({api, getRun, getState, choose, base}) {
  const $=id=>document.getElementById(id), dialog=$('cart-product-detail');
- let request=0, active=null, journal=null, journalKey='', sending=null, scrollTimer=null;
+ let request=0,active=null,scrollTimer=null,journal=null,stopPresence=null,lastObservedCart='';
  const idle=new Set(['waiting_for_user','waiting_for_feedback','paused','closed','error']);
- function persist(){try{sessionStorage.setItem(journalKey,JSON.stringify(journal));}catch{}}
  function ensureJournal(){
-  const key='rs_cart_review_v1:'+getRun().id;
-  if(journalKey===key&&journal&&!journal.ended)return;
-  journalKey=key;let saved;try{saved=JSON.parse(sessionStorage.getItem(key));}catch{}
-  journal=saved&&!saved.ended?saved:{id:'cart-review-'+crypto.randomUUID(),seq:0,pending:[]};
-  record(journal.seq?'session_resumed':'session_started',{interface_version:'cart-detail-v1'},true);
+  if(journal||!getRun())return;
+  journal=window.rsCreateJournal({owner:'review:'+getRun().id,sessionPrefix:'cart-review-',metadata:{interface_version:'participant-observer-v2'},
+   transport:async(sessionId,events)=>(await api('/api/sessions/'+getRun().id+'/review-events',{method:'POST',keepalive:JSON.stringify(events).length<12000,body:JSON.stringify({session_id:sessionId,events})})).json()});
+  stopPresence=window.rsStartPresence?.(record,()=>!!getRun()&&!getState()?.choice,()=>({surface:dialog.open?'product_detail':'assistant_observer',item_id:active?.rendered?active.id:null}));
  }
- function record(type,data={},ready=false){
-  if(!ready)ensureJournal();
-  journal.pending.push({type,...data,event_id:++journal.seq,event_uuid:crypto.randomUUID(),at:new Date().toISOString()});
-  persist();void flush().catch(()=>{});
- }
- async function flush(){
-  if(sending){await sending;if(journal?.pending.length)return flush();return;}
-  if(!journal?.pending.length)return;
-  const current=journal,key=journalKey,runId=getRun().id;
-  sending=(async()=>{
-   while(current.pending.length){
-    const batch=current.pending.slice(0,50);
-    const response=await api('/api/sessions/'+runId+'/review-events',{method:'POST',body:JSON.stringify({session_id:current.id,events:batch})});
-    const ack=new Set((await response.json()).acknowledged);
-    if(!batch.every(e=>ack.has(e.event_uuid)))throw Error('浏览记录尚未保存，请再试一次。');
-    current.pending=current.pending.filter(e=>!ack.has(e.event_uuid));
-    try{sessionStorage.setItem(key,JSON.stringify(current));}catch{}
-   }
-  })();
-  try{await sending;}finally{sending=null;}
+ function record(type,data={}){ensureJournal();return journal?.record(type,data);}
+ async function flush(){if(journal)await journal.flush();}
+ function observeState(state){
+  if(state.choice){stopPresence?.();return;}ensureJournal();
+  const cart=state.cart||[],signature=JSON.stringify(cart);
+  if(signature!==lastObservedCart){lastObservedCart=signature;record('results_rendered',{surface:'assistant_cart',available_item_ids:cart.map(p=>p.id),viewport_item_ids:[],positions:cart.map((p,i)=>({item_id:p.id,result_position:i+1})),item_snapshots:cart.map(p=>({item_id:p.id,title:p.title,displayed_price:p.price,displayed_currency:'CNY'}))});}
  }
  function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
  function asset(src){try{const url=new URL(src,base+'/');return ['https:','http:'].includes(url.protocol)?url.href:'';}catch{return '';}}
@@ -91,14 +75,11 @@ window.createAgentCartDetails = function({api, getRun, getState, choose, base}) 
   }catch(e){if(version===request&&dialog.open){body.textContent=e.message;$('choose-cart-product').disabled=true;}}
  }
  $('choose-cart-product').onclick=()=>{update();if(!$('choose-cart-product').disabled){logScroll();const p=getState().cart.find(x=>x.id===active.id);choose(p.id,p.title);}};
- // Resume a previously unacknowledged batch even if the user reloads and
- // confirms directly from the cart without reopening a product.
- if(getRun()){
-  journalKey='rs_cart_review_v1:'+getRun().id;
-  try{journal=JSON.parse(sessionStorage.getItem(journalKey));}catch{}
-  if(journal?.pending.length)void flush().catch(()=>{});
- }
- const retry=setInterval(()=>{if(journal?.pending.length)void flush().catch(()=>{});},4000);
- window.addEventListener('pagehide',()=>{clearInterval(retry);if(active?.rendered)record('page_exit',{item_id:active.id,surface:'product_detail'});});
- return {open,update,flush,isOpen:()=>dialog.open,finish:async()=>{if(dialog.open){endView();dialog.close();}if(journal){record('session_ended',{status:'selection_completed'});journal.ended=true;persist();await flush();}}};
+ // Record observer interactions as participant actions, never Agent actions.
+ let points=[],motionTimer;
+ function motion(){if(!points.length)return;record('pointer_move',{surface:dialog.open?'product_detail':'assistant_observer',points});points=[];}
+ document.addEventListener('pointermove',e=>{if(!e.isTrusted||!getRun()||getState()?.choice)return;points.push({x:Math.round(e.clientX),y:Math.round(e.clientY),at:new Date().toISOString()});if(points.length>=16)motion();clearTimeout(motionTimer);motionTimer=setTimeout(motion,180);},{capture:true,passive:true});
+ document.addEventListener('click',e=>{if(!e.isTrusted||!getRun()||getState()?.choice)return;motion();record('pointer_click',{x:Math.round(e.clientX),y:Math.round(e.clientY),button:e.button,surface:dialog.open?'product_detail':'assistant_observer',item_id:active?.rendered?active.id:null});},{capture:true,passive:true});
+ window.addEventListener('pagehide',()=>{motion();if(journal&&!getState()?.choice)record('page_exit',{item_id:active?.id||null,surface:'assistant_observer'});});
+ return {open,update,observeState,record,flush,isOpen:()=>dialog.open,finish:async()=>{stopPresence?.();motion();if(dialog.open){endView();dialog.close();}if(journal)await journal.finish('selection_completed');}};
 };

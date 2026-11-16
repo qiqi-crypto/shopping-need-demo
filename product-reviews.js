@@ -21,7 +21,7 @@ window.mountDetailNavigation=function(container,onView){
  window.rsDetailObserverCleanup=()=>{observer.disconnect();mutations.disconnect();};
 };
 window.cleanReviewText=function(value){
- return String(value).replace(/&lt;\s*br\s*\/?\s*&gt;/gi,'\n').replace(/\\?<\s*br\s*\/?\s*>/gi,'\n').replace(/<\/p\s*>/gi,'\n\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\n{3,}/g,'\n\n').trim();
+ return String(value).replace(/\[\[VIDEOID:[^\]]+\]\]/gi,'').replace(/&lt;\s*br\s*\/?\s*&gt;/gi,'\n').replace(/\\?<\s*br\s*\/?\s*>/gi,'\n').replace(/<\/p\s*>/gi,'\n\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\n{3,}/g,'\n\n').trim();
 };
 window.showProductReviews=async function(container,itemId,onLoaded){
  const id=String(itemId).replace(/^amz23:/,'');

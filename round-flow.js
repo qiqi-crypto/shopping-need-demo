@@ -10,7 +10,7 @@ window.showRoundNext=async function(container,reference){
    if(reference.client_id){const pending=await window.rsDrainPlatformEvents?.();if(pending?.pending)throw Error('保存尚未完成，请重试');}
    const a=await window.rsIdentity.request('/api/participant/study/complete',reference);
    sessionStorage.setItem('rs_study_entry',JSON.stringify(a));
-   button.textContent=a.completed?'两轮已完成，返回首页':'继续第二轮：'+(a.arm==='agent_browser'?'购物助手代挑':'自己挑选')+' →';
+   button.textContent=a.completed?'完成本次体验 →':'继续第二轮：'+(a.arm==='agent_browser'?'购物助手代挑':'自己挑选')+' →';
    status.textContent=a.completed?'两轮均已完成，谢谢参与！':'第一轮已完成。下一轮沿用这次购买需求，请重新挑选。';
    button.disabled=false;button.onclick=()=>{
     sessionStorage.removeItem('shopping_agent_session');sessionStorage.removeItem('rs_active_catalog_session');

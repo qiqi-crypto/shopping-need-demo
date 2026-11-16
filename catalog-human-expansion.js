@@ -92,6 +92,7 @@ function renderProducts(){
  observer?.disconnect();visible.clear();
  let results=allItems.filter(p=>p.scene===scene&&(!group||p.group===group));
  const retrieval=window.catalogSearch.search(results,query);
+ window.catalogSearch.prepare(results);
  results=window.catalogSorting.sortProducts(retrieval.items,sort,query,retrieval.scores);
  const pages=Math.max(1,Math.ceil(results.length/18));page=Math.min(page,pages);shown=results.slice((page-1)*18,page*18);pageViewId='view-'+uid();
  $('result-count').textContent=query?`${retrieval.matchedCount?retrieval.matchedCount+' 件相关商品优先，其他商品随后展示':'未找到相关商品，以下为本场景其他商品'} · 共 ${results.length} 件`:`${results.length} 件商品 · ${group||'全部品类'}`;

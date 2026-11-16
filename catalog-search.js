@@ -64,5 +64,18 @@
   // Clearly labelled scene suggestions, never described as matching the query.
   return {items:items.slice(),scores,mode:'scene_suggestions',matchedCount:0,completeCount:0,version};
  }
- const api={search,version};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.catalogSearch=api;
+ // Prepare the same document cache in small idle chunks. No query, ranking or exposure event.
+ const pending=new WeakSet();
+ function prepare(items){
+  const todo=items.filter(p=>!cache.has(p)&&!pending.has(p));todo.forEach(p=>pending.add(p));
+  if(!todo.length)return Promise.resolve();
+  let offset=0;
+  return new Promise(resolve=>{
+   function chunk(){const until=Math.min(offset+64,todo.length);for(;offset<until;offset++){doc(todo[offset]);pending.delete(todo[offset]);}
+    if(offset<todo.length)schedule(chunk);else resolve();}
+   function schedule(fn){if(typeof root.requestIdleCallback==='function')root.requestIdleCallback(fn,{timeout:500});else setTimeout(fn,0);}
+   schedule(chunk);
+  });
+ }
+ const api={search,prepare,version};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.catalogSearch=api;
 })(typeof window==='undefined'?globalThis:window);

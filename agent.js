@@ -21,7 +21,7 @@ const names={input:'输入',click:'点击',go_back:'返回',scroll:'滚动',navi
 let finishRequested=false,lastCartSignature='',lastToolView='';
 const toolNames={search_products:'搜索商品',get_products:'查看商品详情',get_reviews:'查看买家评价',get_cart:'查看购物车',update_cart:'更新购物车'};
 function renderToolView(s){
- if(s.engine!=='catalog-tools'){document.querySelector('.pointer-note').hidden=!s.has_screenshot;return;}
+ if(s.engine!=='catalog-tools'){el('tool-view').hidden=true;document.querySelector('.pointer-note').hidden=!s.has_screenshot;return;}
  document.querySelector('.pointer-note').hidden=true;
  document.querySelector('.footnote').textContent='商品价格统一为人民币参考价。';
  el('live-screen').hidden=true;

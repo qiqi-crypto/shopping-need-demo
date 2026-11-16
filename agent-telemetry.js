@@ -5,9 +5,19 @@
  else{try{const saved=JSON.parse(sessionStorage.getItem('rs_agent_observer'));run=saved?.run;token=saved?.token;}catch{}}
  if(run&&token){
  document.documentElement.dataset.agentBrowser='true';
- const pointer=document.createElement('div');pointer.setAttribute('aria-hidden','true');pointer.style.cssText='display:none;position:fixed;z-index:2147483647;pointer-events:none;color:#ee5816;font-size:24px;filter:drop-shadow(0 1px 2px white)';pointer.innerHTML='➤<span style="font:12px system-ui;background:white;padding:3px;border-radius:4px">上次点击</span>';
- document.addEventListener('click',e=>{if(!e.isTrusted||(!e.clientX&&!e.clientY))return;window.rsLastPointer={x:e.clientX,y:e.clientY,at:new Date().toISOString(),kind:'actual_click',label:(e.target.closest('button,a')?.textContent||'页面').trim().slice(0,60)};pointer.style.display='block';pointer.style.left=e.clientX+'px';pointer.style.top=e.clientY+'px';const host=document.querySelector('dialog[open]')||document.body;host.append(pointer);setTimeout(()=>{(document.querySelector('dialog[open]')||document.body).append(pointer);},0);},true);
+ const pointer=document.createElement('div');pointer.setAttribute('aria-hidden','true');pointer.id='rs-observer-pointer';pointer.style.cssText='display:none;position:fixed;z-index:2147483647;pointer-events:none;width:24px;height:30px;filter:drop-shadow(0 1px 2px #fff)';pointer.innerHTML='<svg width="24" height="30" viewBox="0 0 24 30"><path d="M2 1L2 24L8 18L13 28L18 25L13 15L22 14Z" fill="#ee5816" stroke="white" stroke-width="1.5"/></svg>';
+ const mount=()=>{const host=document.querySelector('dialog[open]')||document.body;if(pointer.parentNode!==host)host.append(pointer);};
+ document.addEventListener('pointermove',e=>{if(!e.isTrusted)return;window.rsLastPointer={x:e.clientX,y:e.clientY,at:new Date().toISOString(),kind:'actual_move'};mount();pointer.style.display='block';pointer.style.left=e.clientX+'px';pointer.style.top=e.clientY+'px';},true);
+ document.addEventListener('pointerdown',e=>{if(!e.isTrusted)return;pointer.style.filter='drop-shadow(0 0 5px #f45b15)';},true);
+ document.addEventListener('pointerup',()=>{pointer.style.filter='drop-shadow(0 1px 2px #fff)';},true);
+ document.addEventListener('click',()=>setTimeout(mount,0),true);window.addEventListener('popstate',mount);
  }
+ // Same trusted-input sampler for people and browser agents; no synthetic events.
+ let motion=[],motionTimer;
+ function flushMotion(){if(!motion.length)return;window.rsRecordBrowserInteraction?.('pointer_move',{points:motion});motion=[];}
+ document.addEventListener('pointermove',e=>{if(!e.isTrusted)return;motion.push({x:Math.round(e.clientX),y:Math.round(e.clientY),at:new Date().toISOString()});if(motion.length>=16)flushMotion();clearTimeout(motionTimer);motionTimer=setTimeout(flushMotion,180);},{capture:true,passive:true});
+ document.addEventListener('click',e=>{if(!e.isTrusted)return;flushMotion();window.rsRecordBrowserInteraction?.('pointer_click',{x:Math.round(e.clientX),y:Math.round(e.clientY),button:e.button});},{capture:true,passive:true});
+ window.addEventListener('pagehide',flushMotion);
  const prefix='rs_event_outbox_v2:';let busy=false;
  function queued(){const q=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k?.startsWith(prefix)){try{q.push(JSON.parse(localStorage.getItem(k)));}catch{}}}return q.sort((a,b)=>a.record.at.localeCompare(b.record.at)||a.record.event_id-b.record.event_id);}
  function owner(){return run?'run:'+run:window.rsIdentity?.get()?.participant_id;}

@@ -44,6 +44,7 @@ function startSession() {
  db.sessions.push(session);sessionStorage.setItem('rs_active_catalog_session',session.session_id);save();event('session_started',{catalog_version:session.catalog_version,interface_version:session.interface_version});
 }
 function event(type,payload={}) {const record={schema_version:'rs-platform-event-v2',event_uuid:uid(),event_id:session.events.length+1,at:new Date().toISOString(),viewport:{width:innerWidth,height:innerHeight},type,...payload};session.events.push(record);save();window.rsSendPlatformEvent?.(record,session.session_id);return record;}
+window.rsRecordBrowserInteraction=(type,payload)=>{if(session?.status==='open')event(type,{...payload,surface:document.querySelector('dialog[open]')?.id||'page',item_id:document.querySelector('#detail-dialog[open]')?currentItem:null});};
 function toast(text){$('toast').textContent=text;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',3500);}
 function activeSession(){if(session.status==='open')return true;toast('这次已结束。可以返回问卷开始下一次。');return false;}
 function displayState(){return {page_view_id:pageViewId,scene,group,query,sort,page,
@@ -98,6 +99,7 @@ function openItem(id,context=displayState()){if(!activeSession())return;const p=
  ${Object.keys(attributes).length?`<section class="detail-section"><h3>规格与属性</h3><table class="spec-table"><tbody>${Object.entries(attributes).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.map(esc).join(' / ')}</td></tr>`).join('')}</tbody></table></section>`:''}
 <section class="detail-section"><h3>买家评价</h3><div id="buyer-reviews"></div></section>
 `;
+ window.mountDetailNavigation?.($('detail-body'),meta=>{if(currentItem===id&&session?.status==='open')event('detail_section_view',{item_id:id,...meta});});
  $('choose-item').dataset.cart=id;$('choose-item').onclick=()=>toggleCart(id);updateCart();
  $('detail-body').querySelectorAll('[data-variant]').forEach(el=>el.onchange=()=>{variants[el.dataset.variant]=el.value;event('variant_change',{item_id:id,attribute:el.dataset.variant,value:el.value,combination_verified:false});});
  if(!history.state?.detail)history.pushState({detail:id},'',location.pathname+location.search+'#item='+encodeURIComponent(id));

@@ -3,6 +3,19 @@
 const el=id=>document.getElementById(id),API=window.SHOPPING_AGENT_API||location.origin;
 let latestState=null;
 let run=null,polling=false,lastMessageCount=0,latestBlob=null,lastScreenshotRevision=null;
+let previewSocket=null,previewLive=false,previewRetryAt=0;
+function connectPreview(){
+ if(!run||previewSocket||Date.now()<previewRetryAt||['closed','error','stopping'].includes(latestState?.status))return;
+ const url=new URL(API+'/api/sessions/'+run.id+'/preview');url.protocol=url.protocol==='https:'?'wss:':'ws:';
+ const ws=new WebSocket(url);previewSocket=ws;
+ ws.onopen=()=>ws.send(JSON.stringify({token:run.token}));
+ ws.onmessage=e=>{let data;try{data=JSON.parse(e.data);}catch{return;}if(data.type!=='frame')return;
+  previewLive=true;el('live-screen').src='data:image/jpeg;base64,'+data.jpeg;el('live-screen').hidden=false;el('screen-empty').hidden=true;
+  document.querySelector('.pointer-note').hidden=false;document.querySelector('.pointer-note').textContent='实时浏览画面';
+ };
+ ws.onerror=()=>ws.close();
+ ws.onclose=()=>{if(previewSocket===ws){previewSocket=null;previewLive=false;previewRetryAt=Date.now()+3000;}document.querySelector('.pointer-note').textContent='浏览画面';};
+}
 const linkParams=new URLSearchParams(location.hash.slice(1));
 const resumeId=linkParams.get('run'),resumeToken=linkParams.get('token');
 if(resumeId&&resumeToken){sessionStorage.setItem('shopping_agent_session',JSON.stringify({id:resumeId,token:resumeToken}));history.replaceState({},'',location.pathname+location.search);}
@@ -55,8 +68,9 @@ function renderLiveCart(s){
 el('preview-cart').onclick=()=>el('finish-shopping').click();
 async function poll(){if(!run||polling)return;polling=true;try{const s=await(await api('/api/sessions/'+run.id)).json();latestState=s;renderLiveCart(s);renderToolView(s);el('finish-shopping').disabled=!!s.choice||['stopping','starting'].includes(s.status);el('status').textContent=s.engine==='catalog-tools'&&['starting','running'].includes(s.status)?'正在搜索和挑选商品…':statuses[s.status]||s.status;el('step').textContent='第 '+s.step+' 步';if(s.messages.length!==lastMessageCount){el('messages').replaceChildren(...s.messages.map(m=>{const d=document.createElement('div');d.className='message '+m.role;d.textContent=m.text.replace(/\*\*/g,'');return d;}));lastMessageCount=s.messages.length;el('messages').scrollTop=el('messages').scrollHeight;}
  const steps=s.timeline.filter(t=>['step_completed','tool_completed','feedback_applied','agent_question','run_error'].includes(t.type));el('timeline').replaceChildren(...steps.map(t=>{const li=document.createElement('li');if(t.type==='step_completed'){li.textContent='第 '+t.step+' 步 · '+(t.actions||[]).map(a=>{const k=Object.keys(a)[0];return (names[k]||k)+(a[k].question?'：'+a[k].question:'');}).join('；')+' · 反馈版本 '+t.feedback_version;}else if(t.type==='tool_completed')li.textContent='第 '+t.step+' 步 · '+(toolNames[t.tool]||t.tool)+(t.result_count!==null?' · '+t.result_count+' 件':'')+(t.success?'':' · 未完成');else if(t.type==='feedback_applied')li.textContent='已采用第 '+t.feedback_version+' 版需求（从第 '+t.effective_next_step+' 步起）';else li.textContent=t.text||t.message;return li;}));el('trace-count').textContent='（'+s.step+' 步）';el('feedback-status').textContent=s.queued_feedback?'补充要求已收到，等待下一步采用。':s.feedback_version?'已采用第 '+s.feedback_version+' 版需求。':'';
- if(s.has_screenshot&&(s.screenshot_revision||String(s.step)+s.status)!==lastScreenshotRevision){const blob=await(await api('/api/sessions/'+run.id+'/screenshot')).blob();if(latestBlob)URL.revokeObjectURL(latestBlob);latestBlob=URL.createObjectURL(blob);el('live-screen').src=latestBlob;el('live-screen').hidden=false;el('screen-empty').hidden=true;lastScreenshotRevision=s.screenshot_revision||String(s.step)+s.status;}
- if(['closed','error'].includes(s.status)){el('send').disabled=true;el('stop').textContent='已结束';el('stop').disabled=true;}
+ if(s.engine!=='catalog-tools')connectPreview();
+ if(!previewLive&&s.has_screenshot&&(s.screenshot_revision||String(s.step)+s.status)!==lastScreenshotRevision){const blob=await(await api('/api/sessions/'+run.id+'/screenshot')).blob();if(!previewLive){if(latestBlob)URL.revokeObjectURL(latestBlob);latestBlob=URL.createObjectURL(blob);el('live-screen').src=latestBlob;el('live-screen').hidden=false;el('screen-empty').hidden=true;lastScreenshotRevision=s.screenshot_revision||String(s.step)+s.status;}}
+ if(['closed','error'].includes(s.status)){el('send').disabled=true;el('stop').textContent='已结束';el('stop').disabled=true;previewSocket?.close();}
  if(finishRequested&&['waiting_for_user','waiting_for_feedback','paused','closed','error'].includes(s.status)){finishRequested=false;showCart();}
  if(s.choice){el('feedback-status').textContent='本轮选择已保存。';el('agent-return').hidden=false;if(!el('agent-return').dataset.ready){el('agent-return').dataset.ready='true';window.showRoundNext?.(el('agent-return'),{run_id:run.id});}}
  }catch(e){error(e);}finally{polling=false;}}

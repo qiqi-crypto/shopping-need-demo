@@ -1,4 +1,25 @@
 /* Only source-matched, validated review translations are delivered here. */
+window.mountDetailNavigation=function(container,onView){
+ window.rsDetailObserverCleanup?.();
+ const dialog=container.closest('dialog'),nav=document.createElement('nav');
+ nav.setAttribute('aria-label','商品详情导航');nav.style.cssText='display:flex;gap:8px;flex-wrap:wrap;padding:10px 0 18px';
+ for(const section of container.querySelectorAll('.detail-section')){
+  const label=section.querySelector('h3')?.textContent?.trim();if(!label)continue;
+  const button=document.createElement('button');button.type='button';button.textContent=label;
+  button.onclick=()=>section.scrollIntoView({behavior:'smooth',block:'start'});nav.append(button);
+ }
+ container.prepend(nav);
+ const observed=new WeakSet(),seen=new WeakSet();
+ const observer=new IntersectionObserver(entries=>{for(const entry of entries){
+  if(!entry.isIntersecting||entry.intersectionRatio<.25||!dialog.open||seen.has(entry.target))continue;
+  seen.add(entry.target);onView({section:entry.target.closest('.detail-section')?.querySelector('h3')?.textContent,
+   content_kind:entry.target.matches('.buyer-review')?'review_text':'section_heading',
+   visible_text:entry.target.innerText.slice(0,1200),visibility:'viewport_observed',intersection_ratio:entry.intersectionRatio});
+ }},{root:dialog,threshold:[.25]});
+ const watch=()=>{for(const node of container.querySelectorAll('.detail-section h3,.buyer-review'))if(!observed.has(node)){observed.add(node);observer.observe(node);}};
+ const mutations=new MutationObserver(watch);mutations.observe(container,{childList:true,subtree:true});watch();
+ window.rsDetailObserverCleanup=()=>{observer.disconnect();mutations.disconnect();};
+};
 window.cleanReviewText=function(value){
  return String(value).replace(/&lt;\s*br\s*\/?\s*&gt;/gi,'\n').replace(/\\?<\s*br\s*\/?\s*>/gi,'\n').replace(/<\/p\s*>/gi,'\n\n').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\n{3,}/g,'\n\n').trim();
 };

@@ -18,11 +18,13 @@ const attributesOf = p => Object.fromEntries(Object.entries(p.attributes||{}).fi
 const itemMap = new Map(allItems.map(p => [p.id, p]));
 const SCENES = {baby:'母婴用品',pets:'宠物生活',moving:'搬家家居',sports:'运动户外'};
 const SCENE_COPY = {baby:['母婴好物','从喂养到出行，给成长中的每一天多一点准备。'],pets:['宠物生活','吃饭、玩耍、出门，照顾它的日常小事。'],moving:['住进喜欢的生活','收纳、清洁与家居用品，让新家一点点有模样。'],sports:['准备好，动起来','从日常锻炼到户外出行，找到顺手的运动装备。']};
-const STORE_KEY = 'rs_m5_store_v1';
+const currentOwner=()=>document.documentElement.dataset.agentBrowser ? 'agent:'+JSON.parse(sessionStorage.getItem('rs_agent_observer')).run : window.rsIdentity?.get()?.participant_id??null;
+let STORE_KEY = 'rs_m5_store_v2:'+String(currentOwner()||'anonymous');
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 let storageOkay = true;
 function load(key, fallback) {try {return JSON.parse(localStorage.getItem(key)) || fallback;} catch {storageOkay=false;return fallback;}}
-let db = load(STORE_KEY, {version:1,user_id:'local-'+uid(),sessions:[]});
+function ownedStore(){const saved=load(STORE_KEY,null);if(saved)return saved;const old=load('rs_m5_store_v1',{sessions:[]});return {version:1,user_id:'local-'+uid(),sessions:old.sessions.filter(s=>s.recording_owner===currentOwner())};}
+let db = ownedStore();
 let researchContext = null;
 try {researchContext=JSON.parse(sessionStorage.getItem('rs_need_handoff_v1') || 'null');} catch {}
 const initialScene = new URLSearchParams(location.search).get('scene');
@@ -159,7 +161,7 @@ document.addEventListener('visibilitychange',()=>{if(session.status==='open')eve
 let scrollTimer;window.addEventListener('scroll',()=>{clearTimeout(scrollTimer);scrollTimer=setTimeout(()=>{if(session.status==='open')event('scroll',{y:Math.round(scrollY),page_view_id:pageViewId,visible_item_ids:[...visible]});},500);},{passive:true});
 let detailScrollTimer;$('detail-dialog').addEventListener('scroll',()=>{clearTimeout(detailScrollTimer);detailScrollTimer=setTimeout(()=>{if(session.status==='open'&&$('detail-dialog').open)event('scroll',{surface:'detail_dialog',item_id:currentItem,y:Math.round($('detail-dialog').scrollTop),viewport_height:$('detail-dialog').clientHeight});},350);},{passive:true});
 if(researchContext?.confirmedNeed?.currentWords?.want){$('need-context').hidden=false;$('need-text').textContent=researchContext.confirmedNeed.currentWords.want;}
-const currentOwner=()=>document.documentElement.dataset.agentBrowser ? 'agent:'+JSON.parse(sessionStorage.getItem('rs_agent_observer')).run : window.rsIdentity?.get()?.participant_id??null;
+
 const activeId=sessionStorage.getItem('rs_active_catalog_session');
 const last=db.sessions.find(s=>s.session_id===activeId);
 if(last&&last.recording_owner===currentOwner()&&last.session_id===window.rsStudyAssignment?.active_client_id&&['selected','no_selection'].includes(last.status)){session=last;}
@@ -170,7 +172,8 @@ window.addEventListener('rs-identity-changed',()=>{
  // Never upload earlier local browsing or another participant's history under a new identity.
  if(session.recording_owner===currentOwner())return;
  session.status='identity_changed';session.ended_at=new Date().toISOString();save();
- document.querySelectorAll('dialog[open]').forEach(d=>d.close());compared.clear();startSession();render();
+ STORE_KEY='rs_m5_store_v2:'+String(currentOwner()||'anonymous');db=ownedStore();
+ document.querySelectorAll('dialog[open]').forEach(d=>d.close());compared.clear();cart.clear();startSession();render();
 });
 window.addEventListener('pagehide',()=>{if(session.status==='open')event('page_exit',{page_view_id:pageViewId});});
 if(agentBrowserMode){for(const id of ['new-session','no-selection','confirm-choice','open-records']){$(id).disabled=true;$(id).hidden=true;}document.querySelectorAll('.utility-bar nav,.need-entry').forEach(n=>n.hidden=true);}

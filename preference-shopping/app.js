@@ -2,19 +2,22 @@
 'use strict';
 (() => {
 const cfg=window.PREFERENCE_CONFIG||{},API=cfg.apiBase,CAT=cfg.catalogBase||API;
-const scenes={sports:{label:'户外活动',categories:{'登山杖':/登山杖|徒步杖/i,'徒步鞋':/徒步鞋|登山鞋/i,'户外背包':/户外背包|徒步背包|登山包/i}},moving:{label:'居家办公',categories:{'办公椅':/办公椅/i,'办公桌':/办公桌|电脑桌|书桌|写字台|学习桌|升降桌|游戏桌/i,'书架':/书架|书柜/i}}};
+const scenes={sports:{label:'运动与户外',categories:{'徒步鞋':/徒步鞋|登山鞋/i,'运动短裤':/运动短裤|跑步短裤|健身短裤|训练短裤|瑜伽短裤|篮球短裤|骑行短裤/i,'运动上衣':/运动上衣|运动T恤|运动衫|运动背心|运动短袖|运动长袖|健身上衣|健身T恤|健身背心|健身短袖|跑步上衣|跑步T恤|跑步背心|训练上衣|训练T恤|训练背心|瑜伽上衣|瑜伽T恤|瑜伽背心/i}},moving:{label:'居家办公',categories:{'办公椅':/办公椅/i,'办公桌':/办公桌|电脑桌|书桌|写字台|学习桌|升降桌|游戏桌/i,'书架':/书架|书柜/i}}};
 const $=id=>document.getElementById(id),app=$('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=x=>JSON.parse(JSON.stringify(x));
 const key='shopping_preference_study_v1';
 let state=null;try{state=JSON.parse(sessionStorage.getItem(key))}catch{}
-if(!state||state.version!==1)state={version:1,participant_id:'sp_'+crypto.randomUUID(),stage:'start',scene:'sports',category:'登山杖',need:'',budget:null,revision:null,order:[],rounds:[],comparison:null};
+if(!state||state.version!==1)state={version:1,participant_id:'sp_'+crypto.randomUUID(),stage:'start',scene:'sports',category:'徒步鞋',need:'',budget:null,revision:null,order:[],rounds:[],comparison:null};
+// Only reset a now-hidden category before the experiment starts. Existing rounds
+// keep their original category and pinned catalogue revision until completion.
+if(state.stage==='start'&&(!scenes[state.scene]||!scenes[state.scene].categories[state.category])){state.scene='sports';state.category='徒步鞋'}
 let current=[],page=1,selection=null,ratings={},preferences={},loading=false,aiExplanation='';
 const save=()=>sessionStorage.setItem(key,JSON.stringify(state));
 const method=m=>m==='human'?'自己搜索':'AI 辅助搜索';
 function hide(text,brand){let value=String(text??'');for(const b of [brand].flat().filter(x=>typeof x==='string'&&x.trim().length>=2)){const safe=b.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');value=value.replace(new RegExp(safe,'gi'),'');}return value.replace(/\s{2,}/g,' ').replace(/^\s*[-–—·:：]+\s*/,'').trim();}
 function brandValues(p){return [p.brand,...Object.entries(p.attributes||{}).filter(([k])=>/品牌|制造商|manufacturer|brand/i.test(k)).flatMap(([,v])=>Array.isArray(v)?v:[v])].filter(Boolean)}
-function title(p){return hide(p.title||p.title_cn_navigation||'商品',brandValues(p)).replace(/[A-Za-z][A-Za-z0-9._'\-]*/g,'').replace(/\s{2,}/g,' ').replace(/^\s*[-–—·:：]+\s*/,'').trim()||'商品';}
+function title(p){return hide(p.title||p.title_cn_navigation||'商品',brandValues(p)).replace(/[A-Za-z][A-Za-z0-9._'\-]*/g,(word,offset,all)=>word.toUpperCase()==='T'&&all.slice(offset+word.length).startsWith('恤')?word:'').replace(/\s{2,}/g,' ').replace(/^\s*[-–—·:：]+\s*/,'').trim()||'商品';}
 function image(p){try{let src=p.images?.[0]?.src||p.image||'';let url=new URL(src,CAT+'/');return ['http:','https:'].includes(url.protocol)?url.href:''}catch{return ''}}
 // Generic unit/material abbreviations remain; other Latin words may be brand aliases.
 const ALLOWED_SPEC_TERMS=new Set(['CM','MM','M','KM','G','KG','MG','ML','L','LB','LBS','OZ','IN','INCH','INCHES','FT','W','V','MAH','USB','PVC','TPU','TPR','EVA','ABS','BPA','PP','PE','PC','PU','XS','S','M','L','XL','XXL','XXS']);

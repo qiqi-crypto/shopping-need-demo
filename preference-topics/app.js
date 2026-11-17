@@ -2,6 +2,7 @@
 (()=>{
 const $=x=>document.getElementById(x),K='preference_topics_v1';let state;try{state=JSON.parse(sessionStorage.getItem(K))}catch{};
 if(!state||state.version!==1)state={version:1,study:'information_search',participant_id:crypto.randomUUID(),phase:'setup',round:0,order:crypto.getRandomValues(new Uint8Array(1))[0]%2?['human','ai']:['ai','human'],answers:{},comparison:null};
+const testParams=new URLSearchParams(location.search);if(testParams.get('engineering_test')==='1'&&state.phase==='setup'&&testParams.get('test_order')==='human_first')state.order=['human','ai'];
 const save=()=>sessionStorage.setItem(K,JSON.stringify(state));const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const base=window.PREFERENCE_API_BASE;let busy=false;
 function msg(s){$('message').textContent=s||''}function fmt(t){if(!t)return '';try{return new Date(t).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}catch{return ''}}
 async function req(path,options={}){if(!base)throw Error('信息搜索服务尚未配置，请稍后再试。');let r;try{r=await fetch(base+path,{...options,headers:{'Content-Type':'application/json','X-Study-Code':sessionStorage.getItem('preference_study_code')||'',...options.headers},signal:AbortSignal.timeout(path==='/api/topics/summary'?120000:45000)})}catch{throw Error('暂时连接不上信息搜索服务，请稍后重试。')}let d;try{d=await r.json()}catch{throw Error('服务返回的数据无法读取。')}if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'搜索服务暂时不可用，请稍后重试。');return d}

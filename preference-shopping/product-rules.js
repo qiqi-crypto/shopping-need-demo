@@ -17,5 +17,17 @@
   }
  };
  function matches(scene,category,title){const r=rules[scene]?.[category];if(!r||typeof title!=='string')return false;if(scene==='sports'&&['运动短裤','运动上衣'].includes(category)&&/儿童|婴儿|童装|男童|女童|睡衣|睡裤|泳衣|泳裤|泳装|文胸|胸罩|内裤|套装|模型|配件|替换/i.test(title))return false;if(scene==='moving'&&category==='书架'&&/办公桌|电脑桌|书桌|写字台|学习桌|升降桌|游戏桌|桌子/i.test(title))return false;const primary=title.split(/[，,；;。|]/,1)[0];return r.want.test(primary)&&!r.deny.test(primary)}
- const api={matches};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.shoppingProductRules=api;
+ // Kept for offline fixture parity. The production page does not reclassify
+ // results: the backend selects the rule version bound to the frozen catalog.
+ function matchesV2(scene,category,title,sourceTitle=''){
+  if(scene!=='sports'||!['徒步鞋','运动上衣'].includes(category))return matches(scene,category,title);
+  if(typeof title!=='string'||typeof sourceTitle!=='string')return false;
+  const both=title+' '+sourceTitle;
+  if(/儿童|婴儿|童装|男童|女童|小童|大童|\b(?:child(?:ren)?|kids?|toddler|infants?|bab(?:y|ies)|boys?|girls?|youth)\b/i.test(both)||/泳衣|泳装|泳裤|内衣|胸罩|文胸|鞋袋|靴袋|鞋套|鞋带|鞋垫|袜子|\b(?:swim(?:wear|suits?|ming)?|bikinis?|underwear|panties|bras?|boot\s+bags?|shoe\s+bags?|socks?|insoles?|shoelaces?)\b/i.test(both))return false;
+  if(matches(scene,category,title))return true;
+  const p=title.split(/[，,；;。|]/,1)[0];
+  if(category==='徒步鞋')return /徒步靴|登山靴|远足靴|徒步运动鞋|登山运动鞋/i.test(p)&&/\b(?:hiking|hike|trekking|mountaineering|trail)\b/i.test(sourceTitle)&&/\b(?:shoes?|boots?|sneakers?)\b/i.test(sourceTitle);
+  return /运动|健身|跑步|训练|瑜伽|健美|篮球|网球|骑行/i.test(p)&&/T\s*恤|衬衫|背心|卫衣|上衣|打底衫|运动衫|跑步衫/i.test(p)&&/\b(?:athletic|sport|sports|gym|workout|running|training|fitness|exercise|yoga|basketball|tennis)\b/i.test(sourceTitle)&&/\b(?:shirts?|t\s*-?\s*shirts?|tees?|tank\s*tops?|sweatshirts?|hoodies?|jerseys?)\b/i.test(sourceTitle);
+ }
+ const api={matches,matchesV2};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.shoppingProductRules=api;
 })(typeof window==='undefined'?globalThis:window);

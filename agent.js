@@ -61,7 +61,7 @@ function renderLiveCart(s){
  el('preview-cart').disabled=!run||!!s.choice||['queued','starting','stopping'].includes(s.status);
  if(signature===lastCartSignature)return;lastCartSignature=signature;
  el('live-cart-count').textContent=cart.length;
- const rows=cart.map(p=>{const row=document.createElement('button');row.className='live-cart-item';row.title=p.title;row.onclick=()=>cartDetails.open(p.id);row.setAttribute('aria-label','查看详情：'+p.title);const im=document.createElement('img');im.src=p.image;im.alt='';const info=document.createElement('span'),title=document.createElement('strong'),price=document.createElement('b');title.textContent=p.title;price.textContent='¥'+Number(p.price).toFixed(2);const hint=document.createElement('small');hint.textContent='查看详情 →';info.append(title,price,hint);row.append(im,info);return row;});
+ const rows=cart.map(p=>{const row=document.createElement('button');row.className='live-cart-item';row.title=p.title;row.onclick=()=>cartDetails.open(p.id);row.setAttribute('aria-label','查看详情：'+p.title);const im=document.createElement('img');im.src=new URL(p.image,API+'/').href;im.alt='';const info=document.createElement('span'),title=document.createElement('strong'),price=document.createElement('b');title.textContent=p.title;price.textContent='¥'+Number(p.price).toFixed(2);const hint=document.createElement('small');hint.textContent='查看详情 →';info.append(title,price,hint);row.append(im,info);return row;});
  if(!rows.length){const empty=document.createElement('p');empty.className='cart-empty';empty.textContent='助手挑好的商品会出现在这里';rows.push(empty);}
  el('live-cart-items').replaceChildren(...rows);el('live-cart-update').textContent='购物车已更新，'+cart.length+' 件商品';
  if(el('agent-cart').open)showCart();
@@ -86,7 +86,7 @@ function showCart(){
  el('agent-cart-items').replaceChildren(...(latestState?.cart||[]).map(p=>{
   const row=document.createElement('div');row.className='cart-row';
   const photo=document.createElement('button');photo.className='cart-photo';photo.setAttribute('aria-label','查看详情：'+p.title);
-  const im=document.createElement('img');im.src=p.image;im.alt='';photo.append(im);photo.onclick=()=>cartDetails.open(p.id,true);
+  const im=document.createElement('img');im.src=new URL(p.image,API+'/').href;im.alt='';photo.append(im);photo.onclick=()=>cartDetails.open(p.id,true);
   const info=document.createElement('div');const title=document.createElement('button');title.className='cart-title';title.textContent=p.title;title.onclick=()=>cartDetails.open(p.id,true);
   const price=document.createElement('b');price.textContent='¥'+Number(p.price).toFixed(2);
   const actions=document.createElement('div');actions.className='cart-item-actions';

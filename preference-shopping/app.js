@@ -14,7 +14,7 @@ const save=()=>sessionStorage.setItem(key,JSON.stringify(state));
 const method=m=>m==='human'?'自己搜索':'AI 辅助搜索';
 function hide(text,brand){let value=String(text??'');for(const b of [brand].flat().filter(x=>typeof x==='string'&&x.trim().length>=2)){const safe=b.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');value=value.replace(new RegExp(safe,'gi'),'');}return value.replace(/\s{2,}/g,' ').replace(/^\s*[-–—·:：]+\s*/,'').trim();}
 function brandValues(p){return [p.brand,...Object.entries(p.attributes||{}).filter(([k])=>/品牌|制造商|manufacturer|brand/i.test(k)).flatMap(([,v])=>Array.isArray(v)?v:[v])].filter(Boolean)}
-function title(p){return hide(p.title||p.title_cn_navigation||'商品',brandValues(p))||'商品';}
+function title(p){return hide(p.title||p.title_cn_navigation||'商品',brandValues(p)).replace(/[A-Za-z][A-Za-z0-9._'\-]*/g,'').replace(/\s{2,}/g,' ').replace(/^\s*[-–—·:：]+\s*/,'').trim()||'商品';}
 function image(p){try{let src=p.images?.[0]?.src||p.image||'';let url=new URL(src,CAT+'/');return ['http:','https:'].includes(url.protocol)?url.href:''}catch{return ''}}
 function scrub(p){const brands=brandValues(p), attrs={};for(const [k,v] of Object.entries(p.attributes||{}))if(!/品牌|制造商|manufacturer|brand/i.test(k))attrs[hide(k,brands)]=(Array.isArray(v)?v:[v]).map(x=>hide(x,brands)).filter(Boolean);return {...p,title:title(p),brand:undefined,attributes:attrs,description:hide(p.description,brands),features:(p.features||[]).map(x=>hide(x,brands)),images:p.images||[{src:p.image||''}]}}
 function shuffle(){return crypto.getRandomValues(new Uint8Array(1))[0]<128?['human','ai']:['ai','human']}

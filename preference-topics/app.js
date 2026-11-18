@@ -66,7 +66,7 @@ async function generate(){
  }catch(e){msg(e.message)}finally{busy=false;if($('get-ai'))$('get-ai').disabled=false}
 }
 function showAI(){
- $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">本次检索匹配 ${esc(state.ai.matched_total)} 条，AI 整理了其中 ${esc(state.ai.retrieved_count)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
+ $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">关键词匹配 ${esc(state.ai.matched_total)} 条，AI 结合本话题资料，共整理了 ${esc(state.ai.retrieved_count)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
 }
 function render(){msg('');if(state.phase==='setup')setup();else if(state.phase==='round')round();else if(state.phase==='evaluation')evaluation();else if(state.phase==='comparison')comparison();else if(state.phase==='done'){$('phase-label').textContent='已完成';$('progress').textContent='完成';$('app').innerHTML='<h1>已完成，谢谢参与！</h1><p>你的体验反馈已提交。</p><div class="actions"><button id="restart">再次体验</button></div>';$('restart').onclick=()=>{sessionStorage.removeItem(K);location.reload()}}else{state.phase='setup';save();setup()}}
 render();

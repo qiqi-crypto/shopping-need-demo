@@ -35,7 +35,7 @@ async function begin(){
   save();msg('');render();
  }catch(e){msg(e.message)}finally{busy=false;if($('begin'))$('begin').disabled=false}
 }
-function qoviaCard(x){return sourceCard({...x,author:'',truncated:x.completeness==='provider_truncated',text_completeness:x.completeness==='provider_truncated'?'partial':'unknown'})}
+function qoviaCard(x){return sourceCard({...x,author:'',truncated:x.completeness==='provider_truncated',text_completeness:x.completeness==='provider_truncated'?'partial':x.completeness})}
 async function qoviaSearch(){
  if(qoviaBusy)return;qoviaBusy=true;msg('');$('sources').innerHTML='<p>正在搜索…</p>';
  try{

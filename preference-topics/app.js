@@ -4,9 +4,9 @@ const $=x=>document.getElementById(x),K='preference_topics_v1';let state;try{sta
 if(!state||state.version!==1)state={version:1,study:'information_search',participant_id:crypto.randomUUID(),phase:'setup',round:0,order:crypto.getRandomValues(new Uint8Array(1))[0]%2?['human','ai']:['ai','human'],answers:{},comparison:null};
 if(state.phase!=='setup' && state.phase!=='done' && state.mode!=='qovia'){state.phase='setup';state.round=0;}
 const testParams=new URLSearchParams(location.search);if(testParams.get('engineering_test')==='1'&&state.phase==='setup'&&testParams.get('test_order')==='human_first')state.order=['human','ai'];
-const save=()=>sessionStorage.setItem(K,JSON.stringify(state));const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const base=window.PREFERENCE_API_BASE;let busy=false;
+const save=()=>sessionStorage.setItem(K,JSON.stringify(state));const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const base=window.PREFERENCE_API_BASE,qoviaBase=window.QOVIA_API_BASE||base;let busy=false;
 function msg(s){$('message').textContent=s||''}function fmt(t){if(!t)return '';try{return new Date(t).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}catch{return ''}}
-async function req(path,options={}){if(!base)throw Error('信息搜索服务尚未配置，请稍后再试。');let r;try{r=await fetch(base+path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout((path==='/api/topics/summary'||path==='/api/topics/qovia/summary')?240000:path.startsWith('/api/topics/search')?80000:45000)})}catch{throw Error('暂时连接不上信息搜索服务，请稍后重试。')}let d;try{d=await r.json()}catch{throw Error('服务返回的数据无法读取。')}if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'搜索服务暂时不可用，请稍后重试。');return d}
+async function req(path,options={}){if(!base)throw Error('信息搜索服务尚未配置，请稍后再试。');let r;const target=path.startsWith('/api/topics/qovia/')?(state.phase==='setup'?qoviaBase:(state.qovia_endpoint||base)):base;try{r=await fetch(target+path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout((path==='/api/topics/summary'||path==='/api/topics/qovia/summary')?240000:path.startsWith('/api/topics/search')?80000:45000)})}catch{throw Error('暂时连接不上信息搜索服务，请稍后重试。')}let d;try{d=await r.json()}catch{throw Error('服务返回的数据无法读取。')}if(!r.ok){const e=Error(typeof d.detail==='string'?d.detail:'搜索服务暂时不可用，请稍后重试。');e.status=r.status;throw e}return d}
 function post(path,data){return req(path,{method:'POST',body:JSON.stringify(data)})}
 function buttons(id,handler){$(id).addEventListener('click',handler)}
 function sourceLink(url){try{let u=new URL(url);if(u.protocol==='https:'&&['weibo.com','www.weibo.com','m.weibo.cn','weibo.cn'].includes(u.hostname))return u.href}catch{}return ''}
@@ -31,7 +31,7 @@ async function begin(){
  try{
   const d=await req('/api/topics/qovia/manifest');
   if(!/^[a-f0-9]{64}$/.test(d.revision)||!Number.isInteger(d.total)||d.total<1)throw Error('历史资料暂不可用。');
-  Object.assign(state,{mode:'qovia',topic:'黄仁勋辞职',question,snapshot_id:'qovia:'+d.revision,snapshot_digest:d.revision,snapshot_at:null,page_count:null,corpus_total:d.total,items:[],ai:null,phase:'round',round:0});
+  Object.assign(state,{mode:'qovia',qovia_endpoint:qoviaBase,topic:'黄仁勋辞职',question,snapshot_id:'qovia:'+d.revision,snapshot_digest:d.revision,snapshot_at:null,page_count:null,corpus_total:d.total,items:[],ai:null,ai_job:null,phase:'round',round:0});
   save();msg('');render();
  }catch(e){msg(e.message)}finally{busy=false;if($('begin'))$('begin').disabled=false}
 }
@@ -54,19 +54,43 @@ function round(){
   qoviaPage=1;qoviaQuery='';$('filter-button').onclick=()=>{qoviaPage=1;qoviaQuery=$('filter').value.trim();qoviaSearch()};
   $('filter').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('filter-button').click()}});
   $('qovia-prev').onclick=()=>{if(!qoviaBusy&&qoviaPage>1){qoviaPage--;qoviaSearch()}};$('qovia-next').onclick=()=>{if(!qoviaBusy){qoviaPage++;qoviaSearch()}};qoviaSearch();
- }else{$('get-ai').onclick=generate;if(state.ai)showAI()}
+ }else{$('get-ai').onclick=generate;if(state.ai)showAI();if(state.ai_job)generate()}
  $('to-eval').onclick=()=>{state.phase='evaluation';save();render()};
 }
 async function generate(){
- if(busy)return;busy=true;$('get-ai').disabled=true;msg('');$('ai-status').textContent='正在阅读并整理全部资料，请稍候；资料较多时可能需要一两分钟。';
+ if(busy)return;busy=true;$('get-ai').disabled=true;$('to-eval').disabled=true;msg('');$('ai-status').textContent='正在准备整理资料…';
  try{
-  let d=await post('/api/topics/qovia/summary',{revision:state.snapshot_digest,query:state.question});
+  // Sessions started before the parallel service keep using the original
+  // synchronous endpoint and original corpus. New sessions pin the new origin.
+  if(!state.qovia_endpoint){
+   const d=await post('/api/topics/qovia/summary',{revision:state.snapshot_digest,query:state.question});
+   if(d.revision!==state.snapshot_digest||typeof d.answer!=='string'||!d.answer.trim()||!Array.isArray(d.citations)||!d.citations.length)throw Error('AI 没有返回可核对的资料引用。');
+   state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null};save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;return;
+  }
+  // Create the identifier before the request. A dropped connection or reload
+  // retries this same job instead of starting another billable workflow.
+  const fresh=!state.ai_job;
+  if(fresh){state.ai_job={id:crypto.randomUUID(),revision:state.snapshot_digest,question:state.question};save()}
+  const job=state.ai_job;
+  if(job.revision!==state.snapshot_digest||job.question!==state.question)throw Error('需求已变化，请重新开始。');
+  // On recovery query the existing task first. Never create a second model
+  // workflow automatically after a lost response or a server restart.
+  let d=fresh?await post('/api/topics/qovia/summary/jobs',{job_id:job.id,revision:job.revision,query:job.question}):await req('/api/topics/qovia/summary/jobs/'+encodeURIComponent(job.id));
+  while(d.status==='running'){
+   if(!$('ai-status'))return;
+   $('ai-status').textContent=Number.isInteger(d.total_batches)?`正在整理资料（${d.completed_batches} / ${d.total_batches} 批），请稍候…`:'正在准备整理资料，请稍候…';
+   await new Promise(resolve=>setTimeout(resolve,8000));
+   d=await req('/api/topics/qovia/summary/jobs/'+encodeURIComponent(job.id));
+  }
+  if(d.status==='failed'){state.ai_job=null;save();throw Error(d.detail||'摘要暂时无法完成，请稍后重试。')}
+  if(d.status!=='complete'||!d.result)throw Error('摘要状态暂不可用，请重试。');
+  d=d.result;
   if(d.revision!==state.snapshot_digest||typeof d.answer!=='string'||!d.answer.trim()||!Array.isArray(d.citations)||!d.citations.length)throw Error('AI 没有返回可核对的资料引用。');
-  state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null};save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
- }catch(e){if($('ai-status'))$('ai-status').textContent='摘要暂时无法生成：'+e.message+' 请稍后点击按钮重试。'}finally{busy=false;if($('get-ai')){$('get-ai').disabled=false;$('get-ai').textContent=state.ai?'重新生成摘要':'重新尝试生成摘要'}}
+  state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null};state.ai_job=null;save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
+ }catch(e){if(e.status===404){state.ai_job=null;save()}if($('ai-status'))$('ai-status').textContent='摘要暂时无法生成：'+e.message+' 请点击按钮重试。'}finally{busy=false;if($('to-eval'))$('to-eval').disabled=!state.ai;if($('get-ai')){$('get-ai').disabled=false;$('get-ai').textContent=state.ai?'重新生成摘要':'重新尝试生成摘要'}}
 }
 function showAI(){
- $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">${state.ai.corpus_total!==null&&state.ai.corpus_total!==undefined&&state.ai.retrieved_count===state.ai.corpus_total?`AI 已阅读本话题全部 ${esc(state.ai.retrieved_count)} 条资料`:`AI 本次参考了 ${esc(state.ai.retrieved_count)} 条资料`}，关键词匹配 ${esc(state.ai.matched_total)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
+ $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">${state.ai.corpus_total!==null&&state.ai.corpus_total!==undefined&&state.ai.retrieved_count===state.ai.corpus_total?`已向 AI 提供本话题全部 ${esc(state.ai.retrieved_count)} 条资料`:`AI 本次参考了 ${esc(state.ai.retrieved_count)} 条资料`}，关键词匹配 ${esc(state.ai.matched_total)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
 }
 function render(){msg('');if(state.phase==='setup')setup();else if(state.phase==='round')round();else if(state.phase==='evaluation')evaluation();else if(state.phase==='comparison')comparison();else if(state.phase==='done'){$('phase-label').textContent='已完成';$('progress').textContent='完成';$('app').innerHTML='<h1>已完成，谢谢参与！</h1><p>你的体验反馈已提交。</p><div class="actions"><button id="restart">再次体验</button></div>';$('restart').onclick=()=>{sessionStorage.removeItem(K);location.reload()}}else{state.phase='setup';save();setup()}}
 render();

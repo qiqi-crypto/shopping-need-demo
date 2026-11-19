@@ -6,7 +6,7 @@ if(state.phase!=='setup' && state.phase!=='done' && state.mode!=='qovia'){state.
 const testParams=new URLSearchParams(location.search);if(testParams.get('engineering_test')==='1'&&state.phase==='setup'&&testParams.get('test_order')==='human_first')state.order=['human','ai'];
 const save=()=>sessionStorage.setItem(K,JSON.stringify(state));const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const base=window.PREFERENCE_API_BASE;let busy=false;
 function msg(s){$('message').textContent=s||''}function fmt(t){if(!t)return '';try{return new Date(t).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'})}catch{return ''}}
-async function req(path,options={}){if(!base)throw Error('信息搜索服务尚未配置，请稍后再试。');let r;try{r=await fetch(base+path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout(path==='/api/topics/summary'?240000:path.startsWith('/api/topics/search')?80000:45000)})}catch{throw Error('暂时连接不上信息搜索服务，请稍后重试。')}let d;try{d=await r.json()}catch{throw Error('服务返回的数据无法读取。')}if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'搜索服务暂时不可用，请稍后重试。');return d}
+async function req(path,options={}){if(!base)throw Error('信息搜索服务尚未配置，请稍后再试。');let r;try{r=await fetch(base+path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout((path==='/api/topics/summary'||path==='/api/topics/qovia/summary')?240000:path.startsWith('/api/topics/search')?80000:45000)})}catch{throw Error('暂时连接不上信息搜索服务，请稍后重试。')}let d;try{d=await r.json()}catch{throw Error('服务返回的数据无法读取。')}if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'搜索服务暂时不可用，请稍后重试。');return d}
 function post(path,data){return req(path,{method:'POST',body:JSON.stringify(data)})}
 function buttons(id,handler){$(id).addEventListener('click',handler)}
 function sourceLink(url){try{let u=new URL(url);if(u.protocol==='https:'&&['weibo.com','www.weibo.com','m.weibo.cn','weibo.cn'].includes(u.hostname))return u.href}catch{}return ''}
@@ -58,15 +58,15 @@ function round(){
  $('to-eval').onclick=()=>{state.phase='evaluation';save();render()};
 }
 async function generate(){
- if(busy)return;busy=true;$('get-ai').disabled=true;msg('');$('ai-status').textContent='正在生成摘要，请稍候…';
+ if(busy)return;busy=true;$('get-ai').disabled=true;msg('');$('ai-status').textContent='正在阅读并整理全部资料，请稍候；资料较多时可能需要一两分钟。';
  try{
   let d=await post('/api/topics/qovia/summary',{revision:state.snapshot_digest,query:state.question});
   if(d.revision!==state.snapshot_digest||typeof d.answer!=='string'||!d.answer.trim()||!Array.isArray(d.citations)||!d.citations.length)throw Error('AI 没有返回可核对的资料引用。');
-  state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total};save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
+  state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null};save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
  }catch(e){if($('ai-status'))$('ai-status').textContent='摘要暂时无法生成：'+e.message+' 请稍后点击按钮重试。'}finally{busy=false;if($('get-ai')){$('get-ai').disabled=false;$('get-ai').textContent=state.ai?'重新生成摘要':'重新尝试生成摘要'}}
 }
 function showAI(){
- $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">关键词匹配 ${esc(state.ai.matched_total)} 条，AI 结合本话题资料，共整理了 ${esc(state.ai.retrieved_count)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
+ $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">${state.ai.corpus_total!==null&&state.ai.corpus_total!==undefined&&state.ai.retrieved_count===state.ai.corpus_total?`AI 已阅读本话题全部 ${esc(state.ai.retrieved_count)} 条资料`:`AI 本次参考了 ${esc(state.ai.retrieved_count)} 条资料`}，关键词匹配 ${esc(state.ai.matched_total)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
 }
 function render(){msg('');if(state.phase==='setup')setup();else if(state.phase==='round')round();else if(state.phase==='evaluation')evaluation();else if(state.phase==='comparison')comparison();else if(state.phase==='done'){$('phase-label').textContent='已完成';$('progress').textContent='完成';$('app').innerHTML='<h1>已完成，谢谢参与！</h1><p>你的体验反馈已提交。</p><div class="actions"><button id="restart">再次体验</button></div>';$('restart').onclick=()=>{sessionStorage.removeItem(K);location.reload()}}else{state.phase='setup';save();setup()}}
 render();

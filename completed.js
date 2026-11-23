@@ -20,6 +20,12 @@
    title.textContent='两轮购物已完成，谢谢参与！';
    status.textContent='最后一步：复制下方参与码，返回 Credamo 问卷粘贴并提交，才算完成本次问卷。';
    code.value=saved.code;receipt.hidden=false;
+   // Starting again is explicit; the server archives the old study only after
+   // a new need is confirmed. The existing receipt and history remain intact.
+   action('重新开始一次体验',()=>{
+    sessionStorage.setItem('rs_restart_completed_study',a.assigned_at);
+    location.href='index.html';
+   });
    copy.onclick=async()=>{
     try{await navigator.clipboard.writeText(code.value);copy.textContent='已复制参与码';copyStatus.textContent='请返回 Credamo 问卷，粘贴参与码并提交。';}
     catch{code.focus();code.select();copyStatus.textContent='已选中参与码，请长按或按 Ctrl+C / ⌘C 复制，再填回 Credamo。';}

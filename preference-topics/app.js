@@ -78,7 +78,7 @@ async function generate(){
   let d=fresh?await post('/api/topics/qovia/summary/jobs',{job_id:job.id,revision:job.revision,query:job.question}):await req('/api/topics/qovia/summary/jobs/'+encodeURIComponent(job.id));
   while(d.status==='running'){
    if(!$('ai-status'))return;
-   $('ai-status').textContent=Number.isInteger(d.total_batches)?`正在整理资料（${d.completed_batches} / ${d.total_batches} 批），请稍候…`:'正在准备整理资料，请稍候…';
+   $('ai-status').textContent=d.waiting?'正在排队，请稍候…':Number.isInteger(d.total_batches)?`正在整理资料（${d.completed_batches} / ${d.total_batches} 批），请稍候…`:'正在准备整理资料，请稍候…';
    await new Promise(resolve=>setTimeout(resolve,8000));
    d=await req('/api/topics/qovia/summary/jobs/'+encodeURIComponent(job.id));
   }

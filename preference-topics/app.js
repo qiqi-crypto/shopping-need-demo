@@ -89,10 +89,15 @@ async function generate(){
   state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null,selection_method:d.selection_method||null};state.ai_job=null;save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
  }catch(e){if(e.status===404){state.ai_job=null;save()}if($('ai-status'))$('ai-status').textContent='摘要暂时无法生成：'+e.message+' 请点击按钮重试。'}finally{busy=false;if($('to-eval'))$('to-eval').disabled=!state.ai;if($('get-ai')){$('get-ai').disabled=false;$('get-ai').textContent=state.ai?'重新生成摘要':'重新尝试生成摘要'}}
 }
+function formatAnswer(answer){
+ // Render only headings actually present in the answer; never invent sections.
+ return String(answer||'').split(/\n+/).map(line=>line.trim()).filter(Boolean).map(line=>{
+  const match=line.match(/^(?:#{1,3}\s*)?(事情概况|事件概况|前情和经过|事件经过|事情经过|前情|经过|后续进展|后续|微博里的观点|不同观点|网友看法|大家的看法)[：:]?\s*(.*)$/);
+  return match?`<div class="answer-section"><h3>${esc(match[1])}</h3>${match[2]?`<p>${esc(match[2])}</p>`:''}</div>`:`<p>${esc(line)}</p>`;
+ }).join('');
+}
 function showAI(){
- const method=state.ai.selection_method==='topic_overview_time_diverse'?'按时间分布挑选':state.ai.selection_method==='query_lexical_ranked'?'按问题关键词挑选':null;
- const count=state.ai.corpus_total!==null&&state.ai.corpus_total!==undefined?`AI 本次从 ${esc(state.ai.corpus_total)} 条资料中参考了 ${esc(state.ai.retrieved_count)} 条`:`AI 本次参考了 ${esc(state.ai.retrieved_count)} 条资料`;
- $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">${count}${method?'，'+method:''}。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
+ $('ai-result').innerHTML=`<h2>整理结果</h2><div class="answer">${formatAnswer(state.ai.answer)}</div><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
 }
 function render(){msg('');if(state.phase==='setup')setup();else if(state.phase==='round')round();else if(state.phase==='evaluation')evaluation();else if(state.phase==='comparison')comparison();else if(state.phase==='done'){$('phase-label').textContent='已完成';$('progress').textContent='完成';$('app').innerHTML='<h1>已完成，谢谢参与！</h1><p>你的体验反馈已提交。</p><div class="actions"><button id="restart">再次体验</button></div>';$('restart').onclick=()=>{sessionStorage.removeItem(K);location.reload()}}else{state.phase='setup';save();setup()}}
 render();

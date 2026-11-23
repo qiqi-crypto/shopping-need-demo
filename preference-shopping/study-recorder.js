@@ -63,6 +63,18 @@ window.createStudyRecorder=function(config){
   const product=node.closest('[data-record-product]'),post=node.closest('[data-record-post]');
   const detail={tag:node.tagName.toLowerCase(),id:String(node.id||'').slice(0,80),x:Math.round(event.clientX),y:Math.round(event.clientY)};
   if(node.matches('button,a,[role="button"]'))detail.label=String(node.innerText||node.getAttribute('aria-label')||'').trim().slice(0,120);
+  // Capture explicitly submitted search/feedback/choice values even when a
+  // browser does not emit a change event before the submit button is clicked.
+  const form=node.closest('form');
+  if(form&&node.matches('button,input[type=submit]')){
+   const values={};let remaining=900;
+   for(const input of form.querySelectorAll('input,select,textarea')){
+    if(['password','file','hidden','submit'].includes(input.type)||(['radio','checkbox'].includes(input.type)&&!input.checked))continue;
+    const name=String(input.name||input.id||'').slice(0,80);if(name&&remaining>0&&Object.keys(values).length<12){const value=String(input.value||'').slice(0,Math.min(500,remaining));values[name]=value;remaining-=name.length+value.length;}
+   }
+   if(Object.keys(values).length)detail.form=values;
+  }
+  if(node.id==='filter-button'){const q=document.getElementById('filter');if(q)detail.search_query=String(q.value||'').slice(0,500)}
   for(const key of ['value','choice','select','view','group','q','comparison'])if(node.dataset&&node.dataset[key]!=null)detail[key]=String(node.dataset[key]).slice(0,120);
   if(product)detail.product_id=String(product.dataset.recordProduct||'').slice(0,120);
   if(post)detail.post_id=String(post.dataset.recordPost||'').slice(0,120);

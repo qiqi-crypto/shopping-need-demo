@@ -49,7 +49,7 @@ async function qoviaSearch(){
 }
 function round(){
  const arm=state.order[state.round];$('phase-label').textContent=`第 ${state.round+1} 轮`;$('progress').textContent=`${state.round+2} / 4`;
- $('app').innerHTML=`<h1>${arm==='human'?'自己查找信息':'AI 帮你整理'}</h1><p>小样本预览，并非完整舆情。两轮使用同一批历史资料；视频或外链内容可能未收录。</p><div class="banner"><strong>${esc(state.topic)}</strong><br>${esc(state.question)}</div>${arm==='human'?`<div class="bar"><input type="text" id="filter" placeholder="在历史帖子中搜索"><button id="filter-button">搜索</button></div><p class="help">共 ${state.corpus_total} 条小样本资料，仅展示微博配文；可输入关键词筛选，也可以浏览。</p><div id="sources"></div><div class="actions"><button id="qovia-prev">上一页</button><span id="qovia-page-info"></span><button id="qovia-next">下一页</button></div>`:`<p class="help">AI 会从小样本中检索微博配文后整理，不能代表完整舆情；请查看引用。</p><button id="get-ai" class="primary">${state.ai?'重新生成摘要':'生成摘要'}</button><p id="ai-status" class="ai-status" role="status" aria-live="polite"></p><div id="ai-result"></div>`}<div class="actions"><button id="to-eval" class="primary" ${arm==='ai'&&!state.ai?'disabled':''}>完成本轮，填写体验</button></div>`;
+ $('app').innerHTML=`<h1>${arm==='human'?'自己查找信息':'AI 帮你整理'}</h1><p>两轮使用同一个历史资料库；视频或外链内容可能未收录。</p><div class="banner"><strong>${esc(state.topic)}</strong><br>${esc(state.question)}</div>${arm==='human'?`<div class="bar"><input type="text" id="filter" placeholder="在历史帖子中搜索"><button id="filter-button">搜索</button></div><p class="help">共 ${state.corpus_total} 条资料，仅展示微博配文；可输入关键词筛选，也可以浏览。</p><div id="sources"></div><div class="actions"><button id="qovia-prev">上一页</button><span id="qovia-page-info"></span><button id="qovia-next">下一页</button></div>`:`<p class="help">AI 会从资料库中挑选微博并整理，请查看引用。</p><button id="get-ai" class="primary">${state.ai?'重新生成摘要':'生成摘要'}</button><p id="ai-status" class="ai-status" role="status" aria-live="polite"></p><div id="ai-result"></div>`}<div class="actions"><button id="to-eval" class="primary" ${arm==='ai'&&!state.ai?'disabled':''}>完成本轮，填写体验</button></div>`;
  if(arm==='human'){
   qoviaPage=1;qoviaQuery='';$('filter-button').onclick=()=>{qoviaPage=1;qoviaQuery=$('filter').value.trim();qoviaSearch()};
   $('filter').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('filter-button').click()}});
@@ -65,7 +65,7 @@ async function generate(){
   if(!state.qovia_endpoint){
    const d=await post('/api/topics/qovia/summary',{revision:state.snapshot_digest,query:state.question});
    if(d.revision!==state.snapshot_digest||typeof d.answer!=='string'||!d.answer.trim()||!Array.isArray(d.citations)||!d.citations.length)throw Error('AI 没有返回可核对的资料引用。');
-   state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null};save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;return;
+   state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null,selection_method:d.selection_method||null};save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;return;
   }
   // Create the identifier before the request. A dropped connection or reload
   // retries this same job instead of starting another billable workflow.
@@ -86,11 +86,13 @@ async function generate(){
   if(d.status!=='complete'||!d.result)throw Error('摘要状态暂不可用，请重试。');
   d=d.result;
   if(d.revision!==state.snapshot_digest||typeof d.answer!=='string'||!d.answer.trim()||!Array.isArray(d.citations)||!d.citations.length)throw Error('AI 没有返回可核对的资料引用。');
-  state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null};state.ai_job=null;save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
+  state.ai={answer:d.answer,citations:d.citations,retrieved_count:d.retrieved_count,matched_total:d.matched_total,corpus_total:Number.isInteger(d.corpus_total)?d.corpus_total:null,selection_method:d.selection_method||null};state.ai_job=null;save();$('ai-status').textContent='';showAI();$('to-eval').disabled=false;
  }catch(e){if(e.status===404){state.ai_job=null;save()}if($('ai-status'))$('ai-status').textContent='摘要暂时无法生成：'+e.message+' 请点击按钮重试。'}finally{busy=false;if($('to-eval'))$('to-eval').disabled=!state.ai;if($('get-ai')){$('get-ai').disabled=false;$('get-ai').textContent=state.ai?'重新生成摘要':'重新尝试生成摘要'}}
 }
 function showAI(){
- $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">${state.ai.corpus_total!==null&&state.ai.corpus_total!==undefined&&state.ai.retrieved_count===state.ai.corpus_total?`已向 AI 提供本话题全部 ${esc(state.ai.retrieved_count)} 条资料`:`AI 本次参考了 ${esc(state.ai.retrieved_count)} 条资料`}，关键词匹配 ${esc(state.ai.matched_total)} 条。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
+ const method=state.ai.selection_method==='topic_overview_time_diverse'?'按时间分布挑选':state.ai.selection_method==='query_lexical_ranked'?'按问题关键词挑选':null;
+ const count=state.ai.corpus_total!==null&&state.ai.corpus_total!==undefined?`AI 本次从 ${esc(state.ai.corpus_total)} 条资料中参考了 ${esc(state.ai.retrieved_count)} 条`:`AI 本次参考了 ${esc(state.ai.retrieved_count)} 条资料`;
+ $('ai-result').innerHTML=`<h2>整理结果</h2><p class="answer">${esc(state.ai.answer)}</p><p class="help">${count}${method?'，'+method:''}。</p><h2>参考资料</h2>${state.ai.citations.map(qoviaCard).join('')}`;
 }
 function render(){msg('');if(state.phase==='setup')setup();else if(state.phase==='round')round();else if(state.phase==='evaluation')evaluation();else if(state.phase==='comparison')comparison();else if(state.phase==='done'){$('phase-label').textContent='已完成';$('progress').textContent='完成';$('app').innerHTML='<h1>已完成，谢谢参与！</h1><p>你的体验反馈已提交。</p><div class="actions"><button id="restart">再次体验</button></div>';$('restart').onclick=()=>{sessionStorage.removeItem(K);location.reload()}}else{state.phase='setup';save();setup()}}
 render();

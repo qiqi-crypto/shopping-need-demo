@@ -38,7 +38,8 @@ function renderActivity(s){
  const active=waiting||['queued','starting','running'].includes(s?.status);
  el('agent-activity').hidden=!active;
  if(!active)return;
- el('agent-activity-text').textContent=s?.status==='queued'?'正在等待购物助手…':waiting&&s?.status!=='running'?'已收到，正在等待助手处理…':(waiting||(s?.feedback_version||0)>1)?'正在根据你的要求调整商品…':'正在搜索和挑选商品…';
+ const count=(s?.cart||[]).length;
+ el('agent-activity-text').textContent=s?.status==='queued'?'正在等待购物助手…':waiting&&s?.status!=='running'?'已收到，正在等待助手处理…':count?'已加入 '+count+' 件，助手还在挑选…':(waiting||(s?.feedback_version||0)>1)?'正在根据你的要求调整商品…':'正在搜索和挑选商品…';
 }
 
 const statuses={queued:'正在等待空闲助手…',stopping:'正在结束，当前动作可能需要几秒钟收尾',starting:'正在启动浏览器…',running:'正在查看页面并决定下一步',waiting_for_user:'正在等你回答，再继续找',waiting_for_feedback:'已挑好候选，可以继续提要求',paused:'请补充要求，我会接着找',closed:'这次浏览已结束',error:'助手遇到问题，请稍后再试'};
@@ -82,13 +83,20 @@ async function poll(){if(!run||polling)return;polling=true;try{const s=await(awa
  if(!previewLive&&s.has_screenshot&&(s.screenshot_revision||String(s.step)+s.status)!==lastScreenshotRevision){const blob=await(await api('/api/sessions/'+run.id+'/screenshot')).blob();if(!previewLive){if(latestBlob)URL.revokeObjectURL(latestBlob);latestBlob=URL.createObjectURL(blob);el('live-screen').src=latestBlob;el('live-screen').hidden=false;el('screen-empty').hidden=true;lastScreenshotRevision=s.screenshot_revision||String(s.step)+s.status;}}
  if(['closed','error'].includes(s.status)){el('send').disabled=true;el('stop').textContent='已结束';el('stop').disabled=true;previewSocket?.close();}
  if(finishRequested&&['waiting_for_user','waiting_for_feedback','paused','closed','error'].includes(s.status)){finishRequested=false;showCart();}
- if(s.choice){el('feedback-status').textContent='本轮选择已保存。';el('agent-return').hidden=false;if(!el('agent-return').dataset.ready){el('agent-return').dataset.ready='true';window.showRoundNext?.(el('agent-return'),{run_id:run.id});}}
+ if(s.choice){el('feedback-status').textContent='本轮选择已保存。需要开始新的购物，请返回首页填写需求。';el('message').disabled=true;el('send').disabled=true;el('agent-return').hidden=false;if(!el('agent-return').dataset.ready){el('agent-return').dataset.ready='true';window.showRoundNext?.(el('agent-return'),{run_id:run.id});}}
  }catch(e){error(e);}finally{polling=false;}}
 for(const command of ['stop'])el(command).onclick=async()=>{if(command==='stop'&&el('stop').textContent==='开始新一轮'){sessionStorage.removeItem('shopping_agent_session');location.reload();return;}try{await api('/api/sessions/'+run.id+'/control/'+command,{method:'POST'});await poll();}catch(e){error(e);}};
 el('export').onclick=async()=>{try{const data=await(await api('/api/sessions/'+run.id+'/export')).json();const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='shopping-agent-'+run.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){error(e);}};
 const entryScene=new URLSearchParams(location.search).get('scene');if(entryScene)el('scene').value=entryScene;
 let need=null;try{need=JSON.parse(sessionStorage.getItem('rs_need_handoff_v1'));}catch{}
-if(!run&&need?.confirmedNeed){const request=need.confirmedNeed.currentWords||{};const note=need.confirmedNeed.finalNote||'';el('message').value=[request.want,request.budget?'预算：'+request.budget:'',note?'补充要求：'+note:''].filter(Boolean).join('\n');}
+// The server's current study assignment is authoritative; a leftover draft in
+// this tab must not replace the confirmed need for either shopping round.
+if(window.rsStudyAssignment?.context?.confirmedNeed)need=window.rsStudyAssignment.context;
+if(!run&&need?.confirmedNeed&&!el('message').value.trim()){
+ const request=need.confirmedNeed.currentWords||{},note=need.confirmedNeed.finalNote||'';
+ const text=[request.want,request.budget?'预算：'+request.budget:'',note?'补充要求：'+note:''].filter(x=>typeof x==='string'&&x.trim()).join('\n');
+ if(text){el('message').value=text;el('messages').firstElementChild.textContent='已带入你填写的购买需求，可以直接发送，也可以修改。';}
+}
 el('finish-shopping').onclick=async()=>{try{if(!['waiting_for_user','waiting_for_feedback','paused','closed','error'].includes(latestState?.status)){finishRequested=true;await api('/api/sessions/'+run.id+'/control/pause',{method:'POST'});el('feedback-status').textContent='正在整理购物车，当前动作完成后自动打开。';return;}showCart();}catch(e){error(e);}};
 function showCart(){
  if(!el('agent-cart').open)cartDetails.record('cart_open',{item_ids:(latestState?.cart||[]).map(p=>p.id),surface:'assistant_cart'});

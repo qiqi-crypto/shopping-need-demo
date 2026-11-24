@@ -16,6 +16,19 @@
    ctx=await window.purchaseHistory.submit(ctx);
    let a=await window.rsIdentity.request('/api/participant/study',{context:ctx});
    const freshNeed=ctx.confirmedNeed.confirmedAt&&ctx.confirmedNeed.confirmedAt!==a.context?.confirmedNeed?.confirmedAt;
+   // A new questionnaire must not silently replace the two-round study's
+   // original need, or be silently overwritten with the older need.
+   if(!a.completed&&freshNeed&&a.context?.confirmedNeed){
+    status.textContent='你还有上一轮购物未完成，请先完成之前的购物，再开始新的需求。';
+    go.textContent='继续之前的购物';go.disabled=false;
+    go.onclick=()=>{
+     sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));
+     sessionStorage.setItem('rs_study_entry',JSON.stringify(a));
+     const scene=a.context.confirmedNeed?.lifeContext?.id||'baby';
+     location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene='+encodeURIComponent(scene));
+    };
+    return;
+   }
    const explicitRestart=sessionStorage.getItem('rs_restart_completed_study')===a.assigned_at;
    if(a.completed&&(freshNeed||explicitRestart)){
     a=await window.rsIdentity.request('/api/participant/study',{

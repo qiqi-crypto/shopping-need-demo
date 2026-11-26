@@ -9,7 +9,7 @@
  $('self').onclick=()=>modeButton('self_browser');$('agent').onclick=()=>modeButton('agent_browser');
  $('restore').onclick=()=>$('identity-connect').click();
  function updateIdentity(){const connected=!!window.rsIdentity.get();$('invite-wrap').hidden=connected;$('restore').hidden=false;$('restore').textContent=connected?'切换或恢复个人记录':'已有个人记录码？恢复记录';}
- window.addEventListener('rs-identity-changed',updateIdentity);updateIdentity();
+ window.addEventListener('rs-identity-changed',()=>{updateIdentity();$('resume-old').hidden=true;status.textContent='';restore();});updateIdentity();
  function goActive(a){
   if(a.context)sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));
   sessionStorage.setItem('rs_study_entry',JSON.stringify(a));
@@ -32,7 +32,7 @@
  }
  async function restore(){
   if(!window.rsIdentity.get())return;
-  try{const a=await window.rsIdentity.request('/api/participant/study');if(a.protocol==='shopping-sequential-v1'){if(a.completed&&sessionStorage.getItem('rs_restart_completed_study')===a.assigned_at&&initial?.confirmedNeed)return;render(a);return;}if(!a.completed)status.textContent='你有尚未完成的原购物体验，请先完成；原有记录不会被覆盖。';}
+  try{const a=await window.rsIdentity.request('/api/participant/study');if(a.protocol==='shopping-sequential-v1'){if(a.completed&&sessionStorage.getItem('rs_restart_completed_study')===a.assigned_at&&initial?.confirmedNeed)return;render(a);return;}if(!a.completed){status.textContent='你有尚未完成的原购物体验，请先完成；原有记录不会被覆盖。';$('resume-old').hidden=false;$('resume-old').onclick=()=>{if(a.context)sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));const scene=a.context?.confirmedNeed?.lifeContext?.id||'baby';location.href=(a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene='+encodeURIComponent(scene);};}}
   catch(e){if(e.status!==404)status.textContent='暂时无法恢复购物进度，请检查连接或切换个人记录。';}
  }
  $('start-plan').onclick=async()=>{

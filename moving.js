@@ -8,7 +8,7 @@
  function modeButton(value){mode=value;for(const [id,v] of [['self','self_browser'],['agent','agent_browser']])$(id).setAttribute('aria-pressed',String(v===mode));}
  $('self').onclick=()=>modeButton('self_browser');$('agent').onclick=()=>modeButton('agent_browser');
  $('restore').onclick=()=>$('identity-connect').click();
- function updateIdentity(){const connected=!!window.rsIdentity.get();$('invite-wrap').hidden=connected;$('restore').hidden=false;$('restore').textContent=connected?'切换或恢复个人记录':'已有个人记录码？恢复记录';}
+ function updateIdentity(){const connected=!!window.rsIdentity.get();$('restore').hidden=false;$('restore').textContent=connected?'切换或恢复个人记录':'已有个人记录码？恢复记录';}
  window.addEventListener('rs-identity-changed',()=>{updateIdentity();$('resume-old').hidden=true;status.textContent='';restore();});updateIdentity();
  function goActive(a){
   if(a.context)sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));
@@ -41,7 +41,7 @@
   if(!initial?.confirmedNeed||initial.confirmedNeed.lifeContext?.id!=='moving'){status.textContent='请先从首页选择搬家场景并填写需求。';return;}
   setBusy($('start-plan'),true);
   try{
-   await window.rsIdentity.ensure($('invite').value.trim());await window.rsLinkVisit?.();
+   await window.rsIdentity.ensure();await window.rsLinkVisit?.();
    initial=await window.purchaseHistory.submit(initial);
    const a=await window.rsIdentity.request('/api/participant/sequential/start',{context:initial,budget});sessionStorage.removeItem('rs_restart_completed_study');render(a);
   }catch(e){error(e);}finally{setBusy($('start-plan'),false);}

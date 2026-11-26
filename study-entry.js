@@ -2,7 +2,7 @@
 (() => {
  const $=id=>document.getElementById(id),go=$('start'),status=$('entry-status');
  $('restore-entry').onclick=()=>$('identity-connect').click();
- function update(){const connected=!!window.rsIdentity.get();$('entry-code-label').hidden=connected;$('restore-entry').hidden=connected;}
+ function update(){const connected=!!window.rsIdentity.get();$('restore-entry').hidden=false;$('restore-entry').textContent=connected?'切换或恢复个人记录':'已有个人记录码？恢复参与记录';}
  update();window.addEventListener('rs-identity-changed',update);
  let ctx=null;try{ctx=JSON.parse(sessionStorage.getItem('rs_need_handoff_v1'));}catch{}
  const eligible=!window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent||ctx?.confirmedNeed?.currentWords?.withoutStudy==='want';
@@ -11,7 +11,7 @@
  go.onclick=async()=>{
   go.disabled=true;status.textContent='';
   try{
-   await window.rsIdentity.ensure($('entry-code').value.trim());
+   await window.rsIdentity.ensure();
    await window.rsLinkVisit?.();
    ctx=await window.purchaseHistory.submit(ctx);
    let a=await window.rsIdentity.request('/api/participant/study',{context:ctx});

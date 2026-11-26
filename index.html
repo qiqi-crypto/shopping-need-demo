@@ -29,6 +29,7 @@
 :root{--ink:#292929;--muted:#777;--green:#e95514;--line:#e7e7e7;--paper:#fff;--bg:#f6f6f6;--soft:#fff0e5;--orange:#db581a;--radius:10px}
 header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180px)/2));border-bottom:2px solid var(--green)}.brand strong{font-size:23px;color:var(--green)}.brand .mark{border-radius:7px}.panel{box-shadow:none}.scene-card,.life-card,.history-editor,.past-card,.secondary,.primary{border-radius:6px}.scene-card[aria-pressed=true],.life-card[aria-pressed=true],.pair-card.selected{background:#fff4eb;border-color:var(--green)}.history-editor{background:#fafafa}.task-context,.notice,.research .note{background:#fff5ed;color:#835333}.progress{background:#fafafa}.top-action{border-radius:5px;border-color:#ddd}.intro{padding-top:16px}.intro h1{font-size:28px}.brand small{font-size:11px}.task-context{border-radius:5px}.primary:hover{background:#cf470b}.scene-card:hover,.life-card:hover{border-color:#f3a078;background:#fff8f2}
 @media(max-width:540px){header{padding:16px}.brand strong{font-size:20px}.intro h1{font-size:25px}}
+.moving-entry{margin:0 0 28px;padding:22px;border:1px solid #f1c9b4;border-radius:10px;background:#fff8f3}.moving-entry h3{margin:0 0 7px;font-size:20px}.moving-entry p{margin:0 0 15px;color:#6f5b50;font-size:15px;line-height:1.65}.moving-entry .entry-note{margin:10px 0 0;color:#7b6d65;font-size:13px}.scene-heading{font-size:15px;margin:0 0 10px}
   .choice-grid>button[aria-pressed=true]{background:var(--soft);border:2px solid var(--green);font-weight:700}
 </style>
 
@@ -47,7 +48,9 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
         <aside id="task-context" class="task-context" aria-label="本次购物背景" hidden><div><small>这次的生活场景</small><strong id="task-context-scene"></strong><p id="task-context-reason"></p></div><button class="ghost" id="change-life">修改</button></aside>
 
         <section id="step-life" aria-labelledby="title-life">
-          <div class="step-label">01 / 真实生活</div><h2 id="title-life" tabindex="-1">最近，哪件事需要添点东西？</h2><p class="lead">先选场景，再说为什么现在需要买。</p>
+          <div class="step-label">01 / 选择场景</div><h2 id="title-life" tabindex="-1">从一个购物场景开始</h2><p class="lead">选择适合你的购物体验。</p>
+          <div class="moving-entry"><h3>🏠 搬家安家 · 连续购物</h3><p>想象你正在布置新家，逐个添加 5—8 个购物需求。每件开始前，你可以选择自己搜索，或让购物助手帮你找。</p><button class="primary" id="start-moving" type="button">开始搬家购物 →</button><p class="entry-note">接下来先填写近期买过的商品，再确认第一个需求和搬家预算。</p></div>
+          <h3 class="scene-heading">或从全部生活场景中选择</h3>
           <div class="life-grid" id="life-grid" aria-label="生活场景"></div>
           <div id="life-detail" hidden><h3 id="life-detail-title">最近发生了什么？</h3><div class="subscene-grid" id="life-subscenes" aria-label="具体情况"></div></div>
           <details class="optional-input"><summary>其他原因 / 自己说</summary><label for="life-other" class="sr-only">自己的场景</label><input id="life-other" type="text" maxlength="400" placeholder="比如刚养猫，家里还没有它的用品"></details>
@@ -72,9 +75,9 @@ header{background:white;max-width:none;padding:20px max(24px,calc((100vw - 1180p
           <div class="step-label">03 / 这次的需求</div><h2 id="title-1" tabindex="-1">这次想买什么？</h2><p class="lead" id="current-context">从你现在需要解决的问题说起。</p>
           <div class="field"><label for="need">我想买……</label><textarea id="need" maxlength="600" placeholder="先用自己的话说说……"></textarea></div>
           <textarea id="reason" hidden></textarea>
-          <div class="cols"><div class="field"><label for="budget">原本的预算</label><input id="budget" type="text" maxlength="100" placeholder="没定可以留空"></div><div class="field"><label for="timing">打算什么时候买？</label><select id="timing"><option>尚未确定</option><option>这几天</option><option>一到两周内</option><option>一个月内</option><option>更晚一些</option><option>目前只是了解，不急着买</option></select></div></div>
-          <div class="field"><label for="purchase-stage">目前的进度</label><select id="purchase-stage"><option>尚未填写</option><option>还在寻找合适的商品</option><option>已经选定具体商品，只需要购买</option><option>尚未决定是否购买</option></select></div>
-          <div class="field"><label for="without-study">不参加研究，你也打算买吗？</label><select id="without-study"><option value="">请选择</option><option value="want">想买</option><option value="no">不打算买</option></select></div>
+          <div class="cols"><div class="field"><label id="budget-label" for="budget">原本的预算</label><input id="budget" type="text" maxlength="100" placeholder="没定可以留空"></div><div class="field" id="timing-field"><label for="timing">打算什么时候买？</label><select id="timing"><option>尚未确定</option><option>这几天</option><option>一到两周内</option><option>一个月内</option><option>更晚一些</option><option>目前只是了解，不急着买</option></select></div></div>
+          <div class="field" id="stage-field"><label for="purchase-stage">目前的进度</label><select id="purchase-stage"><option>尚未填写</option><option>还在寻找合适的商品</option><option>已经选定具体商品，只需要购买</option><option>尚未决定是否购买</option></select></div>
+          <div class="field" id="intent-field"><label for="without-study">不参加研究，你也打算买吗？</label><select id="without-study"><option value="">请选择</option><option value="want">想买</option><option value="no">不打算买</option></select></div>
           <div id="error-1" class="error" role="alert" hidden>先写下正在考虑的东西，或者选择“暂时没有需求”。</div>
           <div class="actions"><button class="secondary" id="back-history">← 过去的记录</button><button class="primary" id="next-1">下一步 →</button></div>
         </section>
@@ -220,7 +223,7 @@ const templates = {
 
 const lifeScenes={
  baby:{label:'母婴 / 育儿',icon:'🧸',sub:['即将 / 刚迎来宝宝','孩子长大，旧用品不合适了','常用品快用完了','准备带孩子出门']},
- moving:{label:'搬家 / 安家',icon:'🏠',sub:['刚搬家，缺一些东西','准备搬家，提前添置','家里收纳空间不够','旧家具 / 用品需要换']},
+ moving:{label:'搬家 / 安家',icon:'🏠',sub:['模拟搬家，准备布置新家','刚搬家，缺一些东西','准备搬家，提前添置','家里收纳空间不够','旧家具 / 用品需要换']},
  pets:{label:'宠物生活',icon:'🐾',sub:['刚养 / 准备养宠物','粮食或耗材快用完了','旧用品不好用','准备带宠物出门']},
  daily:{label:'日常生活',icon:'🧺',sub:['日用品快用完了','旧的坏了 / 不好用','换季，需要添置','一直有个生活小麻烦']},
  sports:{label:'运动 / 户外',icon:'🏃',sub:['刚开始一种运动','旧装备损坏 / 不合适','已经约好运动或户外活动','想提高使用舒适度']},
@@ -308,7 +311,7 @@ function record(type, payload={}) {
   events.push({index:events.length+1,time:NOW(),type,...copy(payload)});
 }
 function rawDraft() {
-  return {want:$('need').value.trim(),reason:$('reason').value.trim(),budget:$('budget').value.trim(),timing:$('timing').value,stage:$('purchase-stage').value,withoutStudy:$('without-study').value};
+  return {want:$('need').value.trim(),reason:$('reason').value.trim(),budget:$('budget').value.trim(),timing:selectedLife==='moving'?null:$('timing').value,stage:selectedLife==='moving'?null:$('purchase-stage').value,withoutStudy:selectedLife==='moving'?null:$('without-study').value};
 }
 function guessCategory(text) {
   const matches=Object.entries(templates).filter(([key,value])=>key!=='other' && value.keywords.test(text));
@@ -326,6 +329,8 @@ function dataSnapshot(){return {prototypeVersion:'order-context-v2',notice:'研�
 function updateData(){$('data-preview').textContent=JSON.stringify(dataSnapshot(),null,2);}
 function setStep(next){
   step=next;window.rsVisitEvent?.('questionnaire_step',{step:String(next)});
+  const moving=selectedLife==='moving';$('timing-field').hidden=moving;$('stage-field').hidden=moving;$('intent-field').hidden=moving;$('budget-label').textContent=moving?'这件商品的预算（可选）':'原本的预算';
+  if(next===1&&moving)$('current-context').textContent='假设你正在布置新家，先写下第一件想找的商品。';
   $('task-context').hidden=next==='life'||next==='none'||next==='history';$('task-context-scene').textContent=lifeContext().label;$('task-context-reason').textContent='为什么现在需要：'+(lifeContext().reason||'尚未说明');
   ['life','history',1,2,3,4,5,6].forEach(n=>$('step-'+n).hidden=n!==next);
   $('no-need-state').hidden=next!=='none';
@@ -417,7 +422,7 @@ function goEdit(target){
   if(target==='life')renderLife();if(target==='history')renderHistory();
   if(target===2)renderScenes();if(target===3)renderAvoids();if(target===4){preparePairs();pairIndex=0;renderPair();}setStep(target);
 }
-function eligible(d){if(!window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent)return true;return d.currentWords.withoutStudy==='want';}
+function eligible(d){if(d?.lifeContext?.id==='moving')return true;if(!window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent)return true;return d.currentWords.withoutStudy==='want';}
 function screenOut(){
  record('screened_out',{reason:'purchase_intent_not_confirmed',answer:$('without-study').value});
  sessionStorage.removeItem('rs_need_handoff_v1');
@@ -425,7 +430,7 @@ function screenOut(){
  $('no-need-state').querySelector('p').textContent='根据你目前的购买计划，你暂不符合本次研究的参与要求。本次填写到这里结束，谢谢。';
  $('return-start').hidden=true;
 }
-$('without-study').addEventListener('change',()=>{if(window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent&&$('without-study').value&&$('without-study').value!=='want')screenOut();});
+$('without-study').addEventListener('change',()=>{if(selectedLife!=='moving'&&window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent&&$('without-study').value&&$('without-study').value!=='want')screenOut();});
 function renderRoute(){
   if(!baseline)return;
   $('demo-switch-help').textContent=selectedLife==='moving'?'进入后设置搬家预算，并为每个购物需求自行选择搜索方式。':'进入前会说明购物车和最终选择方式；系统随机安排本次购物方式。';
@@ -452,7 +457,7 @@ function clearGuided(reason){
 }
 
 $('next-1').addEventListener('click',()=>{
-  const d=rawDraft();if(window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent){if(!d.withoutStudy){$('error-1').textContent='请选择你的购买打算。';$('error-1').hidden=false;return;}if(d.withoutStudy!=='want'){screenOut();return;}}if(!d.want){$('error-1').hidden=false;$('need').focus();return;}$('error-1').hidden=true;
+  const d=rawDraft();if(selectedLife!=='moving'&&window.SHOPPING_STUDY_CONFIG?.requirePurchaseIntent){if(!d.withoutStudy){$('error-1').textContent='请选择你的购买打算。';$('error-1').hidden=false;return;}if(d.withoutStudy!=='want'){screenOut();return;}}if(!d.want){$('error-1').hidden=false;$('need').focus();return;}$('error-1').hidden=true;
   if(!original){original=Object.freeze({...copy(d),capturedAt:NOW()});categoryGuess=guessCategory(d.want);category=categoryGuess;record('initial_unprompted_captured',{data:original});}
   else{record('original_fields_revised',{data:d});const newGuess=guessCategory(d.want);if(newGuess!==categoryGuess){clearGuided('商品描述对应的类别建议改变');categoryGuess=newGuess;category=newGuess;categoryConfirmed=false;}}
   record('guidance_skipped',{from:1,reason:'简化问卷'});toSummary();
@@ -488,6 +493,7 @@ $('restart').addEventListener('click',()=>{
 ['scene-other','constraint-other','generic-tradeoff','final-note'].forEach(id=>$(id).addEventListener('change',()=>{record('free_text_change',{field:id,value:$(id).value.trim()});updateData();}));
 
 $('change-life').addEventListener('click',()=>{if(step==='history'&&historyMethod==='manual'&&historyDirty()&&!saveHistory())return;renderLife();setStep('life');});
+$('start-moving').addEventListener('click',()=>{selectedLife='moving';selectedSub='模拟搬家，准备布置新家';record('life_scene_selected',{id:'moving',source:'moving_entry'});record('life_context_confirmed',lifeContext());renderLife();renderHistory();setStep('history');});
 $('life-next').addEventListener('click',()=>{if(!lifeContextComplete()){$('life-error').hidden=false;return;}$('life-error').hidden=true;record('life_context_confirmed',lifeContext());renderHistory();setStep('history');});
 $('history-form').addEventListener('submit',e=>{e.preventDefault();saveHistory();});
 $('history-cancel').addEventListener('click',()=>{resetHistoryEditor();});

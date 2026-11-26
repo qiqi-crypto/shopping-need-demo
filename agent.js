@@ -83,11 +83,12 @@ async function poll(){if(!run||polling)return;polling=true;try{const s=await(awa
  if(!previewLive&&s.has_screenshot&&(s.screenshot_revision||String(s.step)+s.status)!==lastScreenshotRevision){const blob=await(await api('/api/sessions/'+run.id+'/screenshot')).blob();if(!previewLive){if(latestBlob)URL.revokeObjectURL(latestBlob);latestBlob=URL.createObjectURL(blob);el('live-screen').src=latestBlob;el('live-screen').hidden=false;el('screen-empty').hidden=true;lastScreenshotRevision=s.screenshot_revision||String(s.step)+s.status;}}
  if(['closed','error'].includes(s.status)){el('send').disabled=true;el('stop').textContent='已结束';el('stop').disabled=true;previewSocket?.close();}
  if(finishRequested&&['waiting_for_user','waiting_for_feedback','paused','closed','error'].includes(s.status)){finishRequested=false;showCart();}
- if(s.choice){el('feedback-status').textContent='本轮选择已保存。需要开始新的购物，请返回首页填写需求。';el('message').disabled=true;el('send').disabled=true;el('agent-return').hidden=false;if(!el('agent-return').dataset.ready){el('agent-return').dataset.ready='true';window.showRoundNext?.(el('agent-return'),{run_id:run.id});}}
+ if(s.choice){el('feedback-status').textContent=window.rsStudyAssignment?.protocol==='shopping-sequential-v1'?'这件选择已保存。':'本轮选择已保存。需要开始新的购物，请返回首页填写需求。';el('message').disabled=true;el('send').disabled=true;el('agent-return').hidden=false;if(!el('agent-return').dataset.ready){el('agent-return').dataset.ready='true';window.showRoundNext?.(el('agent-return'),{run_id:run.id});}}
  }catch(e){error(e);}finally{polling=false;}}
 for(const command of ['stop'])el(command).onclick=async()=>{if(command==='stop'&&el('stop').textContent==='开始新一轮'){sessionStorage.removeItem('shopping_agent_session');location.reload();return;}try{await api('/api/sessions/'+run.id+'/control/'+command,{method:'POST'});await poll();}catch(e){error(e);}};
 el('export').onclick=async()=>{try{const data=await(await api('/api/sessions/'+run.id+'/export')).json();const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='shopping-agent-'+run.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){error(e);}};
 const entryScene=new URLSearchParams(location.search).get('scene');if(entryScene)el('scene').value=entryScene;
+if(window.rsStudyAssignment?.protocol==='shopping-sequential-v1')el('scene').disabled=true;
 let need=null;try{need=JSON.parse(sessionStorage.getItem('rs_need_handoff_v1'));}catch{}
 // The server's current study assignment is authoritative; a leftover draft in
 // this tab must not replace the confirmed need for either shopping round.

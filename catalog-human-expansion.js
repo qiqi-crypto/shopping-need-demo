@@ -168,6 +168,7 @@ document.addEventListener('visibilitychange',()=>{if(session.status==='open')eve
 let scrollTimer;window.addEventListener('scroll',()=>{clearTimeout(scrollTimer);scrollTimer=setTimeout(()=>{if(session.status==='open')event('scroll',{y:Math.round(scrollY),page_view_id:pageViewId,visible_item_ids:[...visible]});},500);},{passive:true});
 let detailScrollTimer;$('detail-dialog').addEventListener('scroll',()=>{clearTimeout(detailScrollTimer);detailScrollTimer=setTimeout(()=>{if(session.status==='open'&&$('detail-dialog').open)event('scroll',{surface:'detail_dialog',item_id:currentItem,y:Math.round($('detail-dialog').scrollTop),viewport_height:$('detail-dialog').clientHeight});},350);},{passive:true});
 if(researchContext?.confirmedNeed?.currentWords?.want){$('need-context').hidden=false;$('need-text').textContent=researchContext.confirmedNeed.currentWords.want;}
+if(window.rsStudyAssignment?.protocol==='shopping-sequential-v1')$('need-context').querySelector('a').hidden=true;
 
 const activeId=sessionStorage.getItem('rs_active_catalog_session');
 const last=db.sessions.find(s=>s.session_id===activeId);

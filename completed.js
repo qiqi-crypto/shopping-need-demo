@@ -12,12 +12,16 @@
   try{
    const a=await window.rsIdentity.request('/api/participant/study');
    if(!a.completed){
+    if(a.protocol==='shopping-sequential-v1'){
+     title.textContent='这次体验还没有完成';status.textContent='继续完成搬家场景中的购物需求。';
+     action('继续购物',()=>location.replace(a.arm?(a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene=moving':'moving.html'));return;
+    }
     title.textContent='这次体验还没有完成';status.textContent='继续第 '+a.round_index+' 轮购物，完成两轮后领取参与码。';
     action('继续购物',()=>location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene='+encodeURIComponent(a.context?.confirmedNeed?.lifeContext?.id||'baby')));return;
    }
    const saved=await window.rsIdentity.request('/api/participant/study/completion-code',{});
    if(!/^RS[A-F0-9]{24}$/.test(saved.code))throw Error('参与码暂未生成，请重试');
-   title.textContent='两轮购物已完成，谢谢参与！';
+   title.textContent=a.protocol==='shopping-sequential-v1'?'购物体验已完成，谢谢参与！':'两轮购物已完成，谢谢参与！';
    status.textContent='最后一步：复制下方参与码，返回 Credamo 问卷粘贴并提交，才算完成本次问卷。';
    code.value=saved.code;receipt.hidden=false;
    // Starting again is explicit; the server archives the old study only after

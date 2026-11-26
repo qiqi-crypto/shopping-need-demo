@@ -3,7 +3,7 @@
  const key='rs_participant_v2',API=window.SHOPPING_AGENT_API||location.origin;
  let identity=null;try{identity=JSON.parse(localStorage.getItem(key)||'null');}catch{}
  const authHeaders=()=>({'Content-Type':'application/json',...(identity?{Authorization:'Bearer '+identity.token}:{})});
- async function request(path,body){const r=await fetch(API+path,{method:body?'POST':'GET',headers:authHeaders(),...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'服务器暂时不可用');return d;}
+ async function request(path,body){const r=await fetch(API+path,{method:body?'POST':'GET',headers:authHeaders(),...(body?{body:JSON.stringify(body)}:{})});const d=await r.json();if(!r.ok){const e=Error(typeof d.detail==='string'?d.detail:'服务器暂时不可用');e.status=r.status;throw e;}return d;}
  function remember(d){if(identity&&identity.participant_id!==d.participant_id&&sessionStorage.getItem('shopping_agent_session'))throw Error('请先在 Agent 页结束本轮并点击开始新一轮，再切换参与者。');identity=d;localStorage.setItem(key,JSON.stringify(d));window.dispatchEvent(new CustomEvent('rs-identity-changed'));update();return d;}
  async function ensure(invite){if(identity){await request('/api/participant');return identity;}return remember(await request('/api/participants',{invite}));}
  window.rsIdentity={get:()=>identity,ensure,request};

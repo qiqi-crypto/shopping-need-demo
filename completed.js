@@ -14,7 +14,7 @@
    if(!a.completed){
     if(a.protocol==='shopping-sequential-v1'){
      title.textContent='这次体验还没有完成';status.textContent='继续完成搬家场景中的购物需求。';
-     action('继续购物',()=>location.replace(a.arm?(a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene=moving':'moving.html?v=20261126-open2'));return;
+     action('继续购物',()=>location.replace(a.arm?(a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene=moving':'moving.html?v=20261126-balanced1'));return;
     }
     title.textContent='这次体验还没有完成';status.textContent='继续第 '+a.round_index+' 轮购物，完成两轮后领取参与码。';
     action('继续购物',()=>location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene='+encodeURIComponent(a.context?.confirmedNeed?.lifeContext?.id||'baby')));return;

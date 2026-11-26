@@ -1,1 +1,1 @@
-window.SHOPPING_AGENT_API = 'https://vermont-dollar-edgar-fancy.trycloudflare.com';
+window.SHOPPING_AGENT_API = 'https://cables-assuming-implementing-sally.trycloudflare.com';

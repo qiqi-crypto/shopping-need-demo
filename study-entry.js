@@ -25,7 +25,7 @@
      sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));
      sessionStorage.setItem('rs_study_entry',JSON.stringify(a));
      const scene=a.context.confirmedNeed?.lifeContext?.id||'baby';
-     location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene='+encodeURIComponent(scene));
+     location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene='+encodeURIComponent(scene));
     };
     return;
    }
@@ -35,7 +35,7 @@
      context:ctx,restart_completed:true,previous_study_id:a.assigned_at
     });
    }
-   if(a.completed){location.replace('completed.html');return;}
+   if(a.completed){location.replace('completed.html?v=20261126-open2');return;}
    let old=null;try{old=JSON.parse(sessionStorage.getItem('rs_study_entry'));}catch{}
    // Clear old round pointers, never participant identity or stored history.
    if(old?.assigned_at!==a.assigned_at){
@@ -45,7 +45,7 @@
    if(a.context){ctx=a.context;sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(ctx));}
    sessionStorage.setItem('rs_study_entry',JSON.stringify(a));
    const scene=ctx.confirmedNeed?.lifeContext?.id||new URLSearchParams(location.search).get('scene')||'baby';
-   location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene='+encodeURIComponent(scene));
+   location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene='+encodeURIComponent(scene));
   }catch(e){status.textContent=e.message;go.disabled=false;}
  };
 })();

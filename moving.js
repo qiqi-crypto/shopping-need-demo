@@ -13,10 +13,10 @@
  function goActive(a){
   if(a.context)sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));
   sessionStorage.setItem('rs_study_entry',JSON.stringify(a));
-  location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene=moving');
+  location.replace((a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene=moving');
  }
  function render(a){
-  state=a;if(a.completed){location.replace('completed.html');return;}
+  state=a;if(a.completed){location.replace('completed.html?v=20261126-open2');return;}
   if(a.arm){goActive(a);return;}
   $('setup').hidden=true;$('dashboard').hidden=false;
   $('budget-total').textContent=money(a.budget);$('budget-spent').textContent=money(a.spent||0);
@@ -32,7 +32,7 @@
  }
  async function restore(){
   if(!window.rsIdentity.get())return;
-  try{const a=await window.rsIdentity.request('/api/participant/study');if(a.protocol==='shopping-sequential-v1'){if(a.completed&&sessionStorage.getItem('rs_restart_completed_study')===a.assigned_at&&initial?.confirmedNeed)return;render(a);return;}if(!a.completed){status.textContent='你有尚未完成的原购物体验，请先完成；原有记录不会被覆盖。';$('resume-old').hidden=false;$('resume-old').onclick=()=>{if(a.context)sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));const scene=a.context?.confirmedNeed?.lifeContext?.id||'baby';location.href=(a.arm==='agent_browser'?'agent.html':'catalog.html')+'?scene='+encodeURIComponent(scene);};}}
+  try{const a=await window.rsIdentity.request('/api/participant/study');if(a.protocol==='shopping-sequential-v1'){if(a.completed&&sessionStorage.getItem('rs_restart_completed_study')===a.assigned_at&&initial?.confirmedNeed)return;render(a);return;}if(!a.completed){status.textContent='你有尚未完成的原购物体验，请先完成；原有记录不会被覆盖。';$('resume-old').hidden=false;$('resume-old').onclick=()=>{if(a.context)sessionStorage.setItem('rs_need_handoff_v1',JSON.stringify(a.context));const scene=a.context?.confirmedNeed?.lifeContext?.id||'baby';location.href=(a.arm==='agent_browser'?'agent.html':'catalog.html')+'?v=20261126-open2&scene='+encodeURIComponent(scene);};}}
   catch(e){if(e.status!==404)status.textContent='暂时无法恢复购物进度，请检查连接或切换个人记录。';}
  }
  $('start-plan').onclick=async()=>{
@@ -52,6 +52,6 @@
   requestId=requestId||crypto.randomUUID();setBusy($('start-task'),true);
   try{const a=await window.rsIdentity.request('/api/participant/sequential/task',{request_id:requestId,need,item_budget:budget,arm:mode});requestId=null;if(a.arm)goActive(a);else render(a);}catch(e){error(e);}finally{setBusy($('start-task'),false);}
  };
- $('finish').onclick=async()=>{status.textContent='';setBusy($('finish'),true);try{const a=await window.rsIdentity.request('/api/participant/sequential/finish',{});if(a.completed)location.href='completed.html';}catch(e){error(e);setBusy($('finish'),false);}};
+ $('finish').onclick=async()=>{status.textContent='';setBusy($('finish'),true);try{const a=await window.rsIdentity.request('/api/participant/sequential/finish',{});if(a.completed)location.href='completed.html?v=20261126-open2';}catch(e){error(e);setBusy($('finish'),false);}};
  restore();
 })();
